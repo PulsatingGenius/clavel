@@ -61,6 +61,11 @@ def print_features(perfeat, noperfeat):
     print "flux_percentile_ratio_mid80: %f" % noperfeat.flux_percentile_ratio_mid80()
 
 def classify_lemon_db(filename):
+    """ Performs a classification of stars stored in a LEMON database.
+    
+    """
+    
+    # Create database in LEMON format.
     db = database.LEMONdB(filename)
 
     # Cambiando este valor elegimos una de las estrellas para este ejemplo
@@ -68,6 +73,9 @@ def classify_lemon_db(filename):
 
     # Se obtiene el id de la primera estrella
     star_id = db.star_ids[use_star_id]
+    
+    print "numero de estrellas: %d" % len(db.star_ids)
+    print "numero de filtros: %d" % len(db.pfilters)    
 
     # Se obtiene la curva de la primera estrella para cada uno de los filtros.
     for pfilter in db.pfilters:
@@ -95,22 +103,34 @@ def classify_lemon_db(filename):
         break    
 
 def main(): 
+    """ Main function. Process program arguments and determine if the stars
+    to process are going to be retrieved from a LEMON database or any other
+    source.
     
-    pa = classifargs.ClassifierArguments()
+    """
     
-    return_value = pa.process_program_args()
+    # Create objet to procees program arguments.
+    ca = classifargs.ClassifierArguments()
     
-    if return_value == pa.error_value:
+    # Process program arguments and get the result.
+    args_processing_result = ca.process_program_args()
+    
+    # Determines if there is any error in program arguments.
+    if args_processing_result == ca.error_value:
         print "Error in arguments received by classifier"
-    elif pa.input_file_is_cvs == True:
-        ccsv = classifycsv.ClassifyCSV(pa.filename, 
-                                       pa.stars_set_min_cardinal,
-                                       pa.training_set_percent,
-                                       pa.number_of_trees)
+    # Parameteres of stars to classify are stored in a CSV file.
+    elif ca.input_file_is_cvs == True:
+        # Create object to retrive data from CVS file.
+        ccsv = classifycsv.ClassifyCSV(ca.filename, 
+                                       ca.stars_set_min_cardinal,
+                                       ca.training_set_percent,
+                                       ca.number_of_trees)
         
+        # Classify data retrieved from CSV file.
         ccsv.classify()
     else:  
-        classify_lemon_db(pa.filename)
+        # Is not a CSV file, so it should be a LEMON database.
+        classify_lemon_db(ca.filename)
 
     #lee BD
     #calcula periodograma
@@ -119,8 +139,10 @@ def main():
     #guarda modelo clasificador
     #evalua curvas            
     
-    return return_value
+    # Return the result of processing program arguments.
+    return args_processing_result
 
+# Run 'main' function as __main__.
 if __name__ == "__main__":
     main()
     

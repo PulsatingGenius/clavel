@@ -21,13 +21,21 @@ import csvdata
 from sklearn.ensemble import RandomForestClassifier
 
 class ClassifyCSV(object):
+    """ Encapsulates the functionality to classify stars using the parameters
+        stored in a CSV file.
     
+    """
     def __init__(self, filename_, stars_set_min_cardinal_, training_set_percent_, 
                   number_of_trees_):
+        """ Initiation of ClassifyCSV objects. Only for variable initialization.
         
+        """           
+        
+        # Create objects to store metadata of CSV file and the data of the file.
         self.__meta = csvdata.MetaData()
         self.__ds = csvdata.CSVDataSet(self.__meta)  
         
+        # Name of the file with the confusion matrix generated.
         self.__outfilename = "conf_matrix.csv"
         
         # Name of the csv file.
@@ -39,79 +47,127 @@ class ClassifyCSV(object):
         # Number of decision trees to use for classifying.
         self.__number_of_trees = number_of_trees_  
         
-
     def print_meta_info(self, meta, n, row):
+        """ Print info about the metadata of CSV file.
+        
+        """
+        
+        # Print info for all columns of CSV file.
         for n in range(meta.len()):
             info = meta.get_col_info(n)
             print "%s, Value=%s" % (info, row[n])
         
+        # Return the number of columns.
         return n
     
-    def print_classes_info(self, ds, n, row, current_class, class_count, class_column_number, number_of_rows):
+    def print_classes_info(self, ds, n, row, current_class, class_count, \
+                           class_column_number, number_of_rows):
+        """ Print information about classes and number of instances in each one.
+        
+        """
+        
+        # For all the rows (read previously from CSV file).
         for n in range(number_of_rows):
+            # Get current row.
             row = ds.get_row(n)
+            
+            # If this class is differente of previous class.
             if current_class != row[class_column_number]:
+                # Print information for previous class.
                 if current_class != "":
                     print "Class: %s, number of instances:%d" % \
                     (current_class, class_count)
+                # Update class name.
                 current_class = row[class_column_number]
+                # Initialize counter for the new class.
                 class_count = 1
             else:
+                # Increment counter of classes instances.
                 class_count += 1
         
+        # Print information of last class.
         if current_class != "":
             print "Class: %s, number of instances:%d" % (current_class, class_count)
+            
+        # Return the number of rows.
         return n
     
-    def get_rows_only_with_params(self, ds, param_range, training_indexes, training_set, \
-                             actual_class_name, classnames_training_set):
-        """ . """
+    def get_rows_only_with_params(self, ds, param_range, rows_indexes, rows_set, \
+                             actual_class_name, classnames_set):
+        """ Return the rows received but only with the columns that contains data. 
+        
+        """
     
-        # For all the rows related tdata this training set.
-        for ti in training_indexes:
+        # For all the rows related to data in this row set.
+        for ti in rows_indexes:
             
             # Get the row.
             row = ds.get_row(ti)
             
             param_row = []
             
-            # Copy only the columns of the row related tdata parameters
+            # Copy only the columns of the row related to data parameters
             for i in range(param_range[0], param_range[1]):
                 param_row.append(row[i])
     
             # Add the row of parameters.
-            training_set.append(param_row)
+            rows_set.append(param_row)
             # Add the class name.
-            classnames_training_set.append(actual_class_name)
+            classnames_set.append(actual_class_name)
             
     def get_numerical_classes_set(self, classnames_training_set, unique_classes_name_set):
+        """ Return a set of numbers to identify the class of each data in the
+            training set. The goal is getting an numerical identification for 
+            each class. This number is given to the classifier in place of the 
+            class name. So, the classifier identifies each class with
+            the number given here. 
         
+        """
+        
+        # The list for the numerical identifications of the classes.
         numerical_classes_set = []
         
+        # Get a numeric identification for each class.
         for actual_class_name in classnames_training_set:
             try:
+                # The number is the index that the class name has in the
+                # set that contains all the names of the classes just once.
                 index = unique_classes_name_set.index(actual_class_name)
                 
                 numerical_classes_set.append(index)
             except:
-                print "Error la buscar %s en %s" % \
+                print "Error searching for %s in %s" % \
                     (actual_class_name, unique_classes_name_set)
         
         return numerical_classes_set        
             
     def get_unique_classes(self, classes_names):
-            
+        """ Receives the complete set of names for all the stars and
+            return a list that contains each class name just once.
+        
+        """
+        
+        # Set that will contain the names of the classese just once.
         unique_classes_names = []
         
+        # For all the classes names.
         for c in classes_names:
             try:
+                # Check if the class name is already in the set of
+                # unique class names.
                 unique_classes_names.index(c)
             except ValueError:
+                # It is not in the set, so add to it.
                 unique_classes_names.append(c)
         
         return unique_classes_names
     
-    def generate_confusion_matrix(self, eval_set_class_names, classes_prediction, unique_classes_name_set, total_instances, perc_pred_success):
+    def generate_confusion_matrix(self, eval_set_class_names, 
+                                  classes_prediction,unique_classes_name_set,
+                                  total_instances, perc_pred_success):
+        """ Generate the confusion matrix with the results of the prediction.
+        
+        """
         
         header_row = ['']
         header_row.extend(unique_classes_name_set)
@@ -145,6 +201,7 @@ class ClassifyCSV(object):
 #        print total_instances
 #        print perc_pred_success 
           
+        # Write the confusion matrix to a CSV file.
         with open(self.__outfilename, 'wb') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quotechar='"')
             writer.writerow(header_row)      
@@ -156,7 +213,11 @@ class ClassifyCSV(object):
             writer.writerow(perc_pred_success)          
         
     def evaluate_prediction(self, clf, evaluation_set, eval_set_class_names, unique_classes_name_set):
-    
+        """ Applies the classifier to the evaluation set, getting the class
+            prediction for each instance of the evalution set.
+        
+        """
+        
         eval_instances_by_class = [0] * len(unique_classes_name_set)
         prediction_results = [0] * len(unique_classes_name_set)
         
@@ -208,7 +269,11 @@ class ClassifyCSV(object):
         
         self.generate_confusion_matrix(eval_set_class_names, predicted_classes, unique_classes_name_set, total_instances, perc_pred_success)     
 
-    def open_csv_file(self):        
+    def open_csv_file(self):
+        """ Read a CSV file and save the data as metadata and data rows.
+        
+        """
+                
         # Read csv file.
         with open(self.__filename, 'rb') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
@@ -229,8 +294,12 @@ class ClassifyCSV(object):
             except csv.Error as p:
                 sys.exit('file %s, line %d: %s' % (self.__filename, reader.line_num, p))      
             
-    def classify(self):      
+    def classify(self):   
+        """ Classify data of the CSV file.
+         
+        """   
         
+        # Open CSV file.
         self.open_csv_file()
                  
         # Set the training options.

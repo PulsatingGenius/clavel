@@ -24,16 +24,22 @@ for number and correctness, and provides these arguments to other modules.
 import sys
 
 class ClassifierArguments(object):
+    """ Encapsulates the processing of program arguments, the file name with
+        the data of stars and the some parameters for the classifying process.
+        
+    """
     
     def __init__(self):
         """ Initiation of ClassifierArguments objects. 
-            Only for variable initialization. """   
+            Only for variable initialization.
+        
+        """   
         
         # Limits for some values of arguments.
-        # Maximun valur for the percentage of instances of each class to be 
+        # Maximum value for the percentage of instances of each class to be 
         # used for training.
         self.__max_percent = 99
-        # Maximun number of decision trees to use for classifying.
+        # Maximum number of decision trees to use for classifying.
         self.__max_trees = 200          
                 
         # Name of the database of light curves.
@@ -76,6 +82,11 @@ class ClassifierArguments(object):
         return self.__error_value        
     
     def print_usage(self, program_name):
+        """ Print help to standard output about the arguments
+            to be used when invoking the classifier. 
+            
+        """
+            
         print "------------------------------------------------------------------------------------------"
         print "Usage:"
         print "%s name [min] [perc] [trees] \n%s \n%s \n%s%d. \n%s%d." % \
@@ -89,6 +100,12 @@ class ClassifierArguments(object):
         print "------------------------------------------------------------------------------------------"   
     
     def process_filename_arg(self, value, program_name):
+        """ Checks and save the argument related to the file name that
+            stores the data of stars to classify.
+            
+        """
+        
+        # Initialize return value.
         return_value = self.__no_error_value    
         
         try:
@@ -97,9 +114,17 @@ class ClassifierArguments(object):
             self.print_usage(program_name)
             return_value = self.error_value
             
+        # Return a value to indicate if there was an error or not.
         return return_value
     
     def process_minset_arg(self, value, program_name):
+        """ Checks and save the argument related to the minimum number of
+            instances of each variable star type to be taken into account
+            for classification. 
+            
+        """
+        
+        # Initialize return value.        
         return_value = self.no_error_value  
             
         try:
@@ -113,42 +138,69 @@ class ClassifierArguments(object):
             self.print_usage(program_name)
             return_value = self.error_value        
             
+        # Return a value to indicate if there was an error or not.
         return return_value
     
     def process_trainpercent_arg(self, value, program_name):
+        """ Checks and save the argument related to the percentage of stars
+            to use to train the classifier. 
+            
+        """
+        
+        # Initialize return value.          
         return_value = self.no_error_value  
             
+        # Check if argument received is an integer value.
         try:
             n = int(value)
+            # It is an integer, check if value is in the range.
             if n <= self.__max_percent:
                 self.__training_set_percent = n
             else:
+                # Print error message to standard output related to range.
                 print "Error: 'Training percent' argument should be smaller than 200."
                 return_value = self.error_value            
         except ValueError:
+            # Argument is not an integer, print help.
             self.print_usage(program_name)
             return_value = self.error_value
             
+        # Return a value to indicate if there was an error or not.
         return return_value
     
     def process_numoftrees_arg(self, value, program_name):
+        """ Checks and save the argument related to the number of trees
+            to use to train the classifier. 
+            
+        """
+        
+        # Initialize return value.          
         return_value = self.no_error_value    
         
+        # Check if argument received is an integer value.
         try:
             n = int(value)
+            # It is an integer, check if value is in the range.
             if n < self.__max_trees:
                 self.__number_of_trees = n
             else:
+                # Print error message to standard output related to range.
                 print "Error: 'Number of trees' argument should be smaller than 200."
                 return_value = self.error_value            
         except ValueError:
+            # Argument is not an integer, print help.
             self.print_usage(program_name)
             return_value = self.error_value         
             
+        # Return a value to indicate if there was an error or not.
         return return_value
     
     def process_program_args(self):
+        """ Process the program arguments.
         
+        """
+        
+        # Initialize return value. 
         return_value = self.no_error_value
         
         num_of_arguments = len(sys.argv)
@@ -160,6 +212,7 @@ class ClassifierArguments(object):
             self.print_usage(sys.argv[0])  
             
             return_value = self.error_value
+        # Process each argument received.
         elif num_of_arguments > 1 :
             return_value = self.process_filename_arg(sys.argv[1], program_name)
             if (return_value <> self.error_value ) and ( num_of_arguments > 2 ):
@@ -169,15 +222,23 @@ class ClassifierArguments(object):
             if (return_value <> self.error_value ) and ( num_of_arguments > 4 ):
                 return_value = self.process_numoftrees_arg(sys.argv[4], program_name) 
             if (return_value <> self.error_value ) and ( num_of_arguments > 5 ):
+                # Print a message indicating that too much arguments.
                 print "Too much arguments for classifier, received %d, only 5 are necessary" % \
                     len(sys.argv)
                             
+        # Return a value to indicate if there was an error or not.
         return return_value
     
     def input_file_is_cvs(self):
+        """ Determine if file name correspond to a CSV file.
+        
+        """
+        
+        # Initialize return value. 
         is_cvs = True
         
         try:
+            # Look for the extension of a CSV file name.
             self.__filename.index(".csv")
         except ValueError:
             is_cvs = False
