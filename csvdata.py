@@ -228,7 +228,7 @@ class TrainingData(object):
         self.__training_indexes_for_classes.append(training_indexes)       
         self.__evaluation_indexes_for_classes.append(evaluation_indexes)
     
-    def __init__(self, min_cardinal_, training_set_percent_, ds_, meta_):
+    def __init__(self, min_cardinal_, training_set_percent_, dataset_, meta_):
         """ . """
         
         self.__num_of_instances_of_class = []        
@@ -240,7 +240,7 @@ class TrainingData(object):
         self.__training_set_percent = training_set_percent_
         
         # Initialize training options.        
-        number_of_data_rows = ds_.get_number_of_rows()
+        number_of_data_rows = dataset_.get_number_of_rows()
         class_column_number = meta_.get_col_of_class()
         
         current_class_name = ""   
@@ -248,7 +248,7 @@ class TrainingData(object):
                
         # Inspect the classes of all the rows and get the training set for each.
         for row_index in range(number_of_data_rows):
-            row = ds_.get_row(row_index)
+            row = dataset_.get_row(row_index)
             
             # Check if class of current row is not equal to previous row.
             if current_class_name != row[class_column_number]:

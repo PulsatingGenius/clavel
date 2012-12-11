@@ -28,7 +28,6 @@ to their periodic light variations.
 import numpy as np
 import scipy.signal
 import pylab
-import lsproperties
 
 class LombScargle(object):
     """ Encapsulates the calculation of parameters from a light curve.
@@ -170,5 +169,3 @@ curveperiods_ -
             self.__plot_periodgram(self.nmags, self.ntimes, freqs)
             
         return self.lsprop.pgram, self.nmags, self.ntimes
- 
-

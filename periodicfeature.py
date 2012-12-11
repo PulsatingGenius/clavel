@@ -36,7 +36,7 @@ calculations from curve values.
 
 """
 
-    def __init__(self, lsprop_, num_freq_ = 3):
+    def __init__(self, pgram_, lsprop_, num_freq_ = 3):
         """ Instantiation method for the PeriodicFeature class.
 
 Arguments:
@@ -47,6 +47,7 @@ num_freq - number of frequencies to sample in the range of frequencies
 
         self.num_freq = num_freq_
         self.lsprop = lsprop_;
+        self.__pgram = pgram_
         
     def __str__(self):
         """ The 'informal' string representation """
@@ -65,9 +66,9 @@ num_freq - number of frequencies to sample in the range of frequencies
 
         # Check that frequency requested is in the range of frequencies 
         # calculated in periodgram.
-        if index >= len(self.lsprop.pgram):
+        if index >= len(self.__pgram):
             msg = "Index %d is out of range of periodgram[0:%d]" % \
-                (index, len(self.lsprop.pgram) - 1)
+                (index, len(self.__pgram) - 1)
             raise IndexError(msg)
         else:
             # Calculate the interval of frequencies used in periodgram.
@@ -100,7 +101,7 @@ num_freq - number of frequencies to sample in the range of frequencies
 
             # Return the value in th periodgram for the index of the 
             # frequency requested.
-            return self.lsprop.pgram[index]
+            return self.__pgram[index]
         else:
             msg = "Amplitude index %d is out of range" % num_freq
             raise IndexError(msg)
@@ -134,7 +135,7 @@ num_freq - number of frequencies to sample in the range of frequencies
             actual_harm_index = num_freq * (harm + 1)
 
             # Check if this harmonic in in the periodgram calculated.
-            if actual_harm_index < len(self.lsprop.pgram):
+            if actual_harm_index < len(self.__pgram):
                 # Calculate the frequency for this index.
                 freq_harm = self.__get_freq_from_index(actual_harm_index)
 
@@ -164,8 +165,8 @@ num_freq - number of frequencies to sample in the range of frequencies
         actual_harm_index = self.lsprop.index_max_values[num_freq] * (harm + 1)
 
         # Check if this harmonic exists in the periodgram calculated.
-        if actual_harm_index < len(self.lsprop.pgram):
-            amplitude = self.lsprop.pgram[actual_harm_index]
+        if actual_harm_index < len(self.__pgram):
+            amplitude = self.__pgram[actual_harm_index]
 
         return amplitude
 
@@ -198,12 +199,12 @@ num_freq - number of frequencies to sample in the range of frequencies
     
     def freq_y_offset(self):
         """ Calculates the offset of the values in the periodgram, this offset
-            is calculates as the minimun value in the periodgram. """
+            is calculated as the minimum value in the periodgram. """
             
-        offset = self.lsprop.pgram[0]
+        offset = self.__pgram[0]
         
-        for i in range(len(self.lsprop.pgram)):
-            if self.lsprop.pgram[i] < offset:
-                offset = self.lsprop.pgram[i]
+        for i in range(len(self.__pgram)):
+            if self.__pgram[i] < offset:
+                offset = self.__pgram[i]
         
         return offset

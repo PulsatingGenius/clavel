@@ -21,15 +21,14 @@ import csvdata
 from sklearn.ensemble import RandomForestClassifier
 
 class ClassifyCSV(object):
-    """ Encapsulates the functionality to classify stars using the parameters
+    """ Encapsulates the functionality to classify stars using the attributes
         stored in a CSV file.
     
     """
+    
     def __init__(self, filename_, stars_set_min_cardinal_, training_set_percent_, 
                   number_of_trees_):
-        """ Initiation of ClassifyCSV objects. Only for variable initialization.
-        
-        """           
+        """ Initiation of ClassifyCSV objects. Only for variable initialization. """           
         
         # Create objects to store metadata of CSV file and the data of the file.
         self.__meta = csvdata.MetaData()
@@ -48,9 +47,7 @@ class ClassifyCSV(object):
         self.__number_of_trees = number_of_trees_  
         
     def print_meta_info(self, meta, n, row):
-        """ Print info about the metadata of CSV file.
-        
-        """
+        """ Print info about the metadata of CSV file. """
         
         # Print info for all columns of CSV file.
         for n in range(meta.len()):
@@ -62,9 +59,7 @@ class ClassifyCSV(object):
     
     def print_classes_info(self, ds, n, row, current_class, class_count, \
                            class_column_number, number_of_rows):
-        """ Print information about classes and number of instances in each one.
-        
-        """
+        """ Print information about classes and number of instances in each one. """
         
         # For all the rows (read previously from CSV file).
         for n in range(number_of_rows):
@@ -94,9 +89,7 @@ class ClassifyCSV(object):
     
     def get_rows_only_with_params(self, ds, param_range, rows_indexes, rows_set, \
                              actual_class_name, classnames_set):
-        """ Return the rows received but only with the columns that contains data. 
-        
-        """
+        """ Return the rows received but only with the columns that contains data. """
     
         # For all the rows related to data in this row set.
         for ti in rows_indexes:
@@ -147,7 +140,7 @@ class ClassifyCSV(object):
         
         """
         
-        # Set that will contain the names of the classese just once.
+        # Set that will contain the names of the classes just once.
         unique_classes_names = []
         
         # For all the classes names.
@@ -163,11 +156,9 @@ class ClassifyCSV(object):
         return unique_classes_names
     
     def generate_confusion_matrix(self, eval_set_class_names, 
-                                  classes_prediction,unique_classes_name_set,
+                                  classes_prediction, unique_classes_name_set,
                                   total_instances, perc_pred_success):
-        """ Generate the confusion matrix with the results of the prediction.
-        
-        """
+        """ Generate the confusion matrix with the results of the prediction. """
         
         header_row = ['']
         header_row.extend(unique_classes_name_set)
@@ -194,12 +185,6 @@ class ClassifyCSV(object):
             
             # First column is the name of the class, the index must be incremented.
             row[index_class_evaluated + 1] += 1
-    
-        # Print confusion matrix to standard output.
-#        print header_row
-#            
-#        print total_instances
-#        print perc_pred_success 
           
         # Write the confusion matrix to a CSV file.
         with open(self.__outfilename, 'wb') as csvfile:
@@ -214,7 +199,7 @@ class ClassifyCSV(object):
         
     def evaluate_prediction(self, clf, evaluation_set, eval_set_class_names, unique_classes_name_set):
         """ Applies the classifier to the evaluation set, getting the class
-            prediction for each instance of the evalution set.
+            prediction for each instance of the evaluation set.
         
         """
         
@@ -270,9 +255,7 @@ class ClassifyCSV(object):
         self.generate_confusion_matrix(eval_set_class_names, predicted_classes, unique_classes_name_set, total_instances, perc_pred_success)     
 
     def open_csv_file(self):
-        """ Read a CSV file and save the data as metadata and data rows.
-        
-        """
+        """ Read a CSV file and save the data as metadata and data rows. """
                 
         # Read csv file.
         with open(self.__filename, 'rb') as csvfile:
@@ -295,9 +278,7 @@ class ClassifyCSV(object):
                 sys.exit('file %s, line %d: %s' % (self.__filename, reader.line_num, p))      
             
     def classify(self):   
-        """ Classify data of the CSV file.
-         
-        """   
+        """ Classify data of the CSV file. """   
         
         # Open CSV file.
         self.open_csv_file()

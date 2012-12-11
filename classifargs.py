@@ -29,7 +29,8 @@ class ClassifierArguments(object):
         
     """
     
-    def __init__(self):
+    def __init__(self, stars_set_min_cardinal_ = 15, training_set_percent_ = 65, 
+                 number_of_trees_ = 60):
         """ Initiation of ClassifierArguments objects. 
             Only for variable initialization.
         
@@ -45,11 +46,11 @@ class ClassifierArguments(object):
         # Name of the database of light curves.
         self.__filename = ""
         # Minimum number of instances in a class to be used for training.
-        self.__stars_set_min_cardinal = 15
+        self.__stars_set_min_cardinal = stars_set_min_cardinal_
         # Percentage of instances of each class to be used for training.
-        self.__training_set_percent = 65
+        self.__training_set_percent = training_set_percent_
         # Number of decision trees to use for classifying.
-        self.__number_of_trees = 60  
+        self.__number_of_trees = number_of_trees_  
         
         # Value for no error return value.
         self.__no_error_value = 0
@@ -57,21 +58,21 @@ class ClassifierArguments(object):
         # Value for error return value.
         self.__error_value = -1        
         
-    @property 
-    def filename(self):
-        return self.__filename
-    
-    @property 
+    @property
     def stars_set_min_cardinal(self):
-        return self.__stars_set_min_cardinal
-    
-    @property 
+        return self.__stars_set_min_cardinal  
+
+    @property
     def training_set_percent(self):
         return self.__training_set_percent
     
-    @property 
+    @property
     def number_of_trees(self):
-        return self.__number_of_trees    
+        return self.__number_of_trees 
+        
+    @property 
+    def filename(self):
+        return self.__filename 
     
     @property 
     def no_error_value(self):
@@ -196,9 +197,7 @@ class ClassifierArguments(object):
         return return_value
     
     def process_program_args(self):
-        """ Process the program arguments.
-        
-        """
+        """ Process the program arguments. """
         
         # Initialize return value. 
         return_value = self.no_error_value
@@ -230,9 +229,7 @@ class ClassifierArguments(object):
         return return_value
     
     def input_file_is_cvs(self):
-        """ Determine if file name correspond to a CSV file.
-        
-        """
+        """ Determine if file name correspond to a CSV file. """
         
         # Initialize return value. 
         is_cvs = True

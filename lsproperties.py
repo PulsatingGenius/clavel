@@ -21,8 +21,6 @@ and the parameters related to the period that are used to classify a star.
 
 """
 
-import numpy as np
-
 class LSProperties(object):
     """ This class is used as a container for the parameters used to calculate
         the periodgram of a light curve and the proper periodgram.
@@ -50,14 +48,9 @@ periodgram.
         self.freq_to_calculate = freq_to_calculate_
         self.number_of_freq = number_of_freq_
         self.max_freq = 0.0
-        self.pgram = []
-        self.index_max_values = []          
+        self.index_max_values = []      
         
     def __str__(self):
         """ The 'informal' string representation """
         return "LSProperties: %s(First freq = %.2f freq to calculate = %d)" % \
                (self.__class__.__name__, self.first_freq, self.freq_to_calculate)
-
-    def __len__(self):
-        """ Return the number of frequencies in the periodgram """
-        return len(self.pgram)   
