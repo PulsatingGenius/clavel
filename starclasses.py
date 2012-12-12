@@ -42,6 +42,8 @@ class StarClasses(object):
                     self.__stars_ids.append(int(row[0]))
                     # Add the second element of the row as the star type.
                     self.__stars_classes.append(row[1])
+                    
+                    self.__enabled.append(True)
             except csv.Error as p:
                 sys.exit('file %s, line %d: %s' % (self.__csv_filename, reader.line_num, p))  
                 
@@ -72,6 +74,9 @@ class StarClasses(object):
         self.__stars_ids = []
         self.__stars_classes = []
         self.__filters = []
+        # If there is any problem getting the data of a star, 
+        # it could be disabled and the star shouldn't be used.
+        self.__enabled = []
         # Set that will contain the names of the classes just once.
         self.__unique_classes_names = []
         
@@ -86,6 +91,10 @@ class StarClasses(object):
     @property
     def classes(self):
         return self.__stars_classes   
+
+    @property
+    def enabled(self):
+        return self.__enabled
     
     @property
     def number_of_stars(self):
@@ -145,3 +154,18 @@ class StarClasses(object):
         """ For a given index return the value of that instance. """
         
         return self.__stars_classes[index]
+    
+    def disable_star(self, star_id):
+        """ Disable the star whose identifier is indicated. """
+        
+        print "Disabling star %d ..." % star_id
+        try:
+            # Get the index for the star identifier.
+            index = self.__stars_ids.index(star_id)
+            
+            self.__enabled[index] = False
+            
+            print "... at index %d" % index
+        except ValueError:
+            pass
+        

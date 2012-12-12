@@ -114,7 +114,9 @@ class StarsFeatures(object):
     def calculate_features(self, filename, stars_classes):
         """ Calculate features of the stars. Read the light curves from
             database, calculate periodic and no periodic features and store
-            all the features in a data structure.
+            all the features in a data structure that is accessed using
+            an index corresponding to the order the star has been stored
+            in star_classes.
             
         """       
         
@@ -158,4 +160,6 @@ class StarsFeatures(object):
                     # data structure.
                     self.__features_all_filters[filter_index].append(star_features_in_current_filter) 
                 except TypeError:
-                    print "Error en estrella: %d en filtro: %s" % (star_id, pfilter)
+                    print "Error reading from DB star with identifier %d for filter %s" % (star_id, pfilter)
+                    
+                    stars_classes.disable_star(star_id)

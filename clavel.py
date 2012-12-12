@@ -66,6 +66,8 @@ def predict(clf, evaluation_indexes, features):
     # To save the predictions for each instance.
     predicted_classes = []
     
+    print "evaluation_indexes %s" % evaluation_indexes
+    
     # For each instance in the evaluation set. 
     for index in evaluation_indexes:
         # Predict class for current instance.
@@ -84,14 +86,16 @@ def train_and_predict(classifarg):
     # Get the stars whose classes are known.    
     star_classes = starclasses.StarClasses("Carpenter_ord.csv")
     
+    # Calculate the features of the stars whose identifiers are 
+    # indicated and return all the features in a data structure.
+    # It is done at first to detect any problem with data reading or 
+    # feature calculations, so the star can be discarded.
+    stars_features = starfeatures.StarsFeatures()
+    stars_features.calculate_features(classifarg.db_file, star_classes)        
+    
     # Calculates the training and evaluation sets.
     tr_ev_sets = trainevalsets.TrainEvalSet(classifarg, star_classes)    
     tr_ev_sets.calculate_training_and_evaluation_sets()
-    
-    # Calculate the features of the stars whose identifiers are 
-    # indicated and return all the features in a data structure.
-    stars_features = starfeatures.StarsFeatures()
-    stars_features.calculate_features(classifarg.filename, star_classes)    
 
     # Train and evaluate for all the filters.
     for nfilter in range(stars_features.number_of_filters):
@@ -124,21 +128,15 @@ def main():
     # Create object to process program arguments.
     ca = classifargs.ClassifierArguments()
     
-    # Process program arguments and get the result.
-    args_processing_result = ca.process_program_args()
+    # Process program arguments.
+    ca.parse()
     
-    # Determines if there is any error in program arguments.
-    if args_processing_result == ca.error_value:
-        print "Error in arguments received by classifier"
-    # Parameters of stars to classify are stored in a CSV file.
-    elif ca.input_file_is_cvs() == False:
-        # In put file is not a CSV file, so it should be a LEMON database.
-        train_and_predict(ca)
-    else:  
-        print "This program only process LEMON databases, not CSV files."        
-    
-    # Return the result of processing program arguments.
-    return args_processing_result
+    if ca.is_training():
+        pass               
+    elif ca.is_prediction():
+        pass        
+    elif  ca.ca.is_evaluation():
+        train_and_predict(ca)       
 
 # Run 'main' function as __main__.
 if __name__ == "__main__":

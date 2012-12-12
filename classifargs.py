@@ -21,7 +21,7 @@ for number and correctness, and provides these arguments to other modules.
 
 """
 
-import sys
+import argparse
 
 class ClassifierArguments(object):
     """ Encapsulates the processing of program arguments, the file name with
@@ -56,8 +56,70 @@ class ClassifierArguments(object):
         self.__no_error_value = 0
         
         # Value for error return value.
-        self.__error_value = -1        
+        self.__error_value = -1
         
+        # Initiate program arguments parser.
+        self.__parser = argparse.ArgumentParser()
+        
+        self.__parser.add_argument('-t', metavar='training', nargs=2, dest='t', help='perform only training')
+        
+        self.__parser.add_argument('-p', metavar='prediction', nargs=1, dest='p', help='perform a prediction')
+        
+        self.__parser.add_argument('-e', metavar='evaluation', nargs=2, dest='e', help='perform an evaluation')
+        
+        self.__parser.add_argument('-c', metavar='cardinal', type=int, dest='c', help='used to indicate only training')
+        
+        self.__parser.add_argument('-g', metavar='percentage', type=int, dest='g', help='percentage of instances used for training')
+        
+        self.__parser.add_argument('-r', metavar='trees', type=int, dest='r', help='number of tress used in classification') 
+        
+        self.__args = None    
+        
+        self.__db_file = None
+        
+        self.__stars_file = None   
+        
+    def assign_files(self, file_list):
+        """ Assign the files names received assigning them to the appropriate variable
+            depending on order. First is DB and second the stars list. 
+            
+        """
+        
+        self.__db_file = file_list[0]
+        
+        self.__stars_file = file_list[1] 
+        
+    def is_training(self):        
+        return self.__args.t <> None
+    
+    def is_prediction(self):
+        return self.__args.p <> None
+    
+    def is_evaluation(self):
+        return self.__args.e <> None            
+        
+    def parse(self):
+        
+        self.__args = self.__parser.parse_args()
+        
+        if self.is_training():
+            self.assign_files(self.__args.t)
+            
+        elif self.is_prediction():
+            self.__db_file = self.__args.p[0]
+            
+        elif self.is_evaluation():
+            self.assign_files(self.__args.e) 
+            
+        if self.__args.c <> None:
+            self.__stars_set_min_cardinal = self.__args.c
+            
+        if self.__args.g <> None:
+            self.__training_set_percent = self.__args.g
+            
+        if self.__args.r <> None:
+            self.__number_of_trees = self.__args.r   
+    
     @property
     def stars_set_min_cardinal(self):
         return self.__stars_set_min_cardinal  
@@ -69,175 +131,11 @@ class ClassifierArguments(object):
     @property
     def number_of_trees(self):
         return self.__number_of_trees 
-        
-    @property 
-    def filename(self):
-        return self.__filename 
     
-    @property 
-    def no_error_value(self):
-        return self.__no_error_value
+    @property
+    def db_file(self):
+        return self.__db_file
     
-    @property 
-    def error_value(self):
-        return self.__error_value        
-    
-    def print_usage(self, program_name):
-        """ Print help to standard output about the arguments
-            to be used when invoking the classifier. 
-            
-        """
-            
-        print "------------------------------------------------------------------------------------------"
-        print "Usage:"
-        print "%s name [min] [perc] [trees] \n%s \n%s \n%s%d. \n%s%d." % \
-            (program_name, \
-            "- name - Name of the file with the data.", \
-            "- min - Optional, minimum number of instances in class to be classified.", \
-            "- perc - Optional, percentage of instances to be used for training, 1-", \
-            self.__max_percent,
-            "- trees - Optional, number of decision trees used to classify, <", \
-            self.__max_trees) 
-        print "------------------------------------------------------------------------------------------"   
-    
-    def process_filename_arg(self, value, program_name):
-        """ Checks and save the argument related to the file name that
-            stores the data of stars to classify.
-            
-        """
-        
-        # Initialize return value.
-        return_value = self.__no_error_value    
-        
-        try:
-            self.__filename = value
-        except ValueError:
-            self.print_usage(program_name)
-            return_value = self.error_value
-            
-        # Return a value to indicate if there was an error or not.
-        return return_value
-    
-    def process_minset_arg(self, value, program_name):
-        """ Checks and save the argument related to the minimum number of
-            instances of each variable star type to be taken into account
-            for classification. 
-            
-        """
-        
-        # Initialize return value.        
-        return_value = self.no_error_value  
-            
-        try:
-            n = int(value)
-            if n > 0:
-                self.__stars_set_min_cardinal = n
-            else:
-                print "Error: 'Minimum number of stars in set' argument should be between 1 and 99."
-                return_value = self.error_value            
-        except ValueError:
-            self.print_usage(program_name)
-            return_value = self.error_value        
-            
-        # Return a value to indicate if there was an error or not.
-        return return_value
-    
-    def process_trainpercent_arg(self, value, program_name):
-        """ Checks and save the argument related to the percentage of stars
-            to use to train the classifier. 
-            
-        """
-        
-        # Initialize return value.          
-        return_value = self.no_error_value  
-            
-        # Check if argument received is an integer value.
-        try:
-            n = int(value)
-            # It is an integer, check if value is in the range.
-            if n <= self.__max_percent:
-                self.__training_set_percent = n
-            else:
-                # Print error message to standard output related to range.
-                print "Error: 'Training percent' argument should be smaller than 200."
-                return_value = self.error_value            
-        except ValueError:
-            # Argument is not an integer, print help.
-            self.print_usage(program_name)
-            return_value = self.error_value
-            
-        # Return a value to indicate if there was an error or not.
-        return return_value
-    
-    def process_numoftrees_arg(self, value, program_name):
-        """ Checks and save the argument related to the number of trees
-            to use to train the classifier. 
-            
-        """
-        
-        # Initialize return value.          
-        return_value = self.no_error_value    
-        
-        # Check if argument received is an integer value.
-        try:
-            n = int(value)
-            # It is an integer, check if value is in the range.
-            if n < self.__max_trees:
-                self.__number_of_trees = n
-            else:
-                # Print error message to standard output related to range.
-                print "Error: 'Number of trees' argument should be smaller than 200."
-                return_value = self.error_value            
-        except ValueError:
-            # Argument is not an integer, print help.
-            self.print_usage(program_name)
-            return_value = self.error_value         
-            
-        # Return a value to indicate if there was an error or not.
-        return return_value
-    
-    def process_program_args(self):
-        """ Process the program arguments. """
-        
-        # Initialize return value. 
-        return_value = self.no_error_value
-        
-        num_of_arguments = len(sys.argv)
-        
-        program_name = sys.argv[0]
-    
-        # Not enough arguments or user asking for help.
-        if (num_of_arguments < 2) or (sys.argv[1] == "?"):
-            self.print_usage(sys.argv[0])  
-            
-            return_value = self.error_value
-        # Process each argument received.
-        elif num_of_arguments > 1 :
-            return_value = self.process_filename_arg(sys.argv[1], program_name)
-            if (return_value <> self.error_value ) and ( num_of_arguments > 2 ):
-                return_value = self.process_minset_arg(sys.argv[2], program_name)     
-            if (return_value <> self.error_value ) and ( num_of_arguments > 3 ):
-                return_value = self.process_trainpercent_arg(sys.argv[3], program_name)           
-            if (return_value <> self.error_value ) and ( num_of_arguments > 4 ):
-                return_value = self.process_numoftrees_arg(sys.argv[4], program_name) 
-            if (return_value <> self.error_value ) and ( num_of_arguments > 5 ):
-                # Print a message indicating that too much arguments.
-                print "Too much arguments for classifier, received %d, only 5 are necessary" % \
-                    len(sys.argv)
-                            
-        # Return a value to indicate if there was an error or not.
-        return return_value
-    
-    def input_file_is_cvs(self):
-        """ Determine if file name correspond to a CSV file. """
-        
-        # Initialize return value. 
-        is_cvs = True
-        
-        try:
-            # Look for the extension of a CSV file name.
-            self.__filename.index(".csv")
-        except ValueError:
-            is_cvs = False
-            
-        return is_cvs 
+    @property
+    def stars_file(self):
+        return self.__stars_file

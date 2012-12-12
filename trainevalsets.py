@@ -68,7 +68,10 @@ class TrainEvalSet(object):
         all_classes = self.__star_classes.classes
         
         for i in range(len(all_classes)):
-            if all_classes[i] == class_name:
+            # If current star corresponds to this class and it is enabled,
+            # add it to the set of this class.
+            if ( all_classes[i] == class_name ) and \
+                ( self.__star_classes.enabled[i] ):
                 instances_of_class.append(i)
         
         return instances_of_class
@@ -90,18 +93,22 @@ class TrainEvalSet(object):
         current_class_index = 0
         
         # Count the number of instances for each class.
-        for class_name in self.__star_classes.classes:
-            # The instances are not ordered, so search for the class.
-            try:
-                # Check if any instance of this class has been found before.
-                current_class_index = unique_classes.index(class_name)
-                # Count for it.
-                number_of_instances_by_class[current_class_index] += 1
-            except ValueError:
-                # This is the first instance of this class, add its name.
-                unique_classes.append(class_name)
-                # Count it as a new element.
-                number_of_instances_by_class.append(1)
+        for i in range(len(self.__star_classes.classes)):
+            # Check if the star is enabled, otherwise is ignored.
+            if self.__star_classes.enabled[i]:
+                # The instances are not ordered, so search for the class.
+                try:
+                    class_name = self.__star_classes.classes[i]
+                    
+                    # Check if any instance of this class has been found before.
+                    current_class_index = unique_classes.index(class_name)
+                    # Count for it.
+                    number_of_instances_by_class[current_class_index] += 1
+                except ValueError:
+                    # This is the first instance of this class, add its name.
+                    unique_classes.append(class_name)
+                    # Count it as a new element.
+                    number_of_instances_by_class.append(1)
            
         # Check the number of instances found for each class and determine
         # if it has enough elements for training (a number of instances
