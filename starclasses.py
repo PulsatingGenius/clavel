@@ -32,29 +32,29 @@ class StarClasses(object):
             
         """        
         
-        # Read csv file.
+        # Read csv file with stars identifiers and their classes.
         with open(self.__csv_filename, 'rb') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
             try:
                 # For each row in csv file.
                 for row in reader:
                     # Add the first element of the row as the star id.
-                    self.__stars_ids.append(int(row[0]))
+                    self.__stars_identifiers.append(int(row[0]))
                     # Add the second element of the row as the star type.
-                    self.__stars_classes.append(row[1])
+                    self.__stars_classes_names.append(row[1])
                     
                     self.__enabled.append(True)
             except csv.Error as p:
                 sys.exit('file %s, line %d: %s' % (self.__csv_filename, reader.line_num, p))  
                 
     def get_unique_classes(self):
-        """ Receives the complete set of names for all the stars and
+        """ Takes the complete set of names for all the stars and
             return a list that contains each class name just once.
             
         """
         
         # For all the classes names.
-        for c in self.__stars_classes:
+        for c in self.__stars_classes_names:
             try:
                 # Check if the class name is already in the set of
                 # unique class names.
@@ -63,22 +63,28 @@ class StarClasses(object):
                 # It is not in the set, so add to it.
                 self.__unique_classes_names.append(c)
     
-    def __init__(self, filename_):
+    def __init__(self, stars_info_filename_):
         """ Initializes variables and from the file indicated
             read star identifiers and their class names. 
             
         """
         
-        self.__csv_filename = filename_
+        self.__csv_filename = stars_info_filename_
         
-        self.__stars_ids = []
-        self.__stars_classes = []
-        self.__filters = []
-        # If there is any problem getting the data of a star, 
+        # Identifiers of the stars.
+        self.__stars_identifiers = []
+        # Class name of the stars.
+        self.__stars_classes_names = []
+        # If there is any problem reading the data of a star, 
         # it could be disabled and the star shouldn't be used.
         self.__enabled = []
+        # Features calculated for the star. Only if the star is enabled.
+        self.__features = []
         # Set that will contain the names of the classes just once.
-        self.__unique_classes_names = []
+        self.__unique_classes_names = []        
+        
+        # Filters available in source data.        
+        self.__filters = []
         
         self.read_stars_ids_and_classes()
         
@@ -86,11 +92,11 @@ class StarClasses(object):
         
     @property
     def ids(self):
-        return self.__stars_ids
+        return self.__stars_identifiers
     
     @property
     def classes(self):
-        return self.__stars_classes   
+        return self.__stars_classes_names   
 
     @property
     def enabled(self):
@@ -98,7 +104,7 @@ class StarClasses(object):
     
     @property
     def number_of_stars(self):
-        return len(self.__stars_ids)    
+        return len(self.__stars_identifiers)    
     
     @property
     def unique_classes_names(self):
@@ -123,9 +129,9 @@ class StarClasses(object):
         
         try:
             # Search the index for the identifier.
-            index = self.__stars_ids[iden]
+            index = self.__stars_identifiers[iden]
             # Get the name of its class.
-            class_name = self.__stars_classes[index]
+            class_name = self.__stars_classes_names[index]
             # Search the index for this class name.
             class_number = self.get_class_id(class_name)
         except ValueError:
@@ -148,12 +154,12 @@ class StarClasses(object):
     def get_instance_id(self, index):
         """ For a given index return the value of that instance. """
         
-        return self.__stars_ids[index]    
+        return self.__stars_identifiers[index]    
     
     def get_class_number_from_index(self, index):
         """ For a given index return the value of that instance. """
         
-        return self.__stars_classes[index]
+        return self.__stars_classes_names[index]
     
     def disable_star(self, star_id):
         """ Disable the star whose identifier is indicated. """
@@ -161,7 +167,7 @@ class StarClasses(object):
         print "Disabling star %d ..." % star_id
         try:
             # Get the index for the star identifier.
-            index = self.__stars_ids.index(star_id)
+            index = self.__stars_identifiers.index(star_id)
             
             self.__enabled[index] = False
             

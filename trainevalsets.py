@@ -37,8 +37,8 @@ class TrainEvalSet(object):
         
         # Names of classes.        
         self.__training_classes = []
-        # Identifiers for each class.    
-        self.__sets_of_indexes_for_training_classes = []   
+        # Indexes related to star_class to the stars of each class.    
+        self.__classes_indexes = []   
         # Indexes to use for training in each class.
         self.__sets_of_training_indexes_for_classes = []
         # Indexes to use for evaluation in each class.
@@ -71,15 +71,16 @@ class TrainEvalSet(object):
             # If current star corresponds to this class and it is enabled,
             # add it to the set of this class.
             if ( all_classes[i] == class_name ) and \
-                ( self.__star_classes.enabled[i] ):
+                ( self.__star_classes.enabled[i] == True ):
                 instances_of_class.append(i)
         
         return instances_of_class
             
     def determine_classes_to_use_for_training(self):
         """ Determine the classes to be used for training depending on the
-            number of instances available for each class. If the number 
-            is bigger than minimum cardinal the class is selected for training, 
+            number of instances available for each class. Count the number of
+            instances of each class and if its number of elements is bigger 
+            than minimum cardinal the class is selected for training, 
             otherwise the class and all of its instances are discarded for
             training.
             
@@ -90,12 +91,11 @@ class TrainEvalSet(object):
         unique_classes = [self.__star_classes.classes[0]]
         number_of_instances_by_class = [0]
         
-        current_class_index = 0
-        
-        # Count the number of instances for each class.
+        # Count the number of instances for each class that will be considered
+        # for training.
         for i in range(len(self.__star_classes.classes)):
             # Check if the star is enabled, otherwise is ignored.
-            if self.__star_classes.enabled[i]:
+            if self.__star_classes.enabled[i] == True:
                 # The instances are not ordered, so search for the class.
                 try:
                     class_name = self.__star_classes.classes[i]
@@ -109,6 +109,8 @@ class TrainEvalSet(object):
                     unique_classes.append(class_name)
                     # Count it as a new element.
                     number_of_instances_by_class.append(1)
+            else:
+                print "Instance at index %d ignored for training" % i
            
         # Check the number of instances found for each class and determine
         # if it has enough elements for training (a number of instances
@@ -119,12 +121,20 @@ class TrainEvalSet(object):
                 self.__training_classes.append(unique_classes[i])
                 # Save the instances of this class.
                 instances = self.get_indexes_for_class(unique_classes[i])
-                self.__sets_of_indexes_for_training_classes.append(instances)
+                self.__classes_indexes.append(instances)
+                
+                print "Class %s used for training, %d elements, %s." \
+                    % ( unique_classes[i], len(instances), instances)
+            else:
+                print "Class %s ignored for training, not enough elements." \
+                    % unique_classes[i]
 
     def calculate_training_and_evaluation_sets(self):
-        """ Calculate the sets of instances of each class to be used for
-            training and evaluation. Only classes with a number of instances
-            bigger than minimum cardinal are selected for training.
+        """ Calculate the sets of indexes of each class to be used for
+            training and evaluation. A a random calculation determines
+            the indexes to be used for for training and evaluation.
+            These indexes are related to the position of the star in 
+            star_class.
         
         """
         
@@ -132,7 +142,7 @@ class TrainEvalSet(object):
         self.determine_classes_to_use_for_training()    
         
         # Inspect the classes of all the rows and get the training set for each.
-        for instances in self.__sets_of_indexes_for_training_classes:
+        for instances in self.__classes_indexes:
             # Initialize sets for the training and evaluation indexes of 
             # current class.
             training_indexes = []
@@ -175,10 +185,13 @@ class TrainEvalSet(object):
         instances = []
         class_identifiers = []
         
+        # All the classes.
         for class_index in range(len(self.__training_classes)):
             # Get the set of indexes for current class.
             index_set = sets_of_indexes[class_index]
-            instances_set = self.__sets_of_indexes_for_training_classes[class_index]
+            instances_set = self.__classes_indexes[class_index]
+            
+            "Clase %s numero de instancias %d" % (self.__star_classes.classes[class_index], len(index_set))
             
             for i in index_set:
                 instances.append(instances_set[i])

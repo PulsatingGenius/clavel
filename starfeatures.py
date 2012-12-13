@@ -163,3 +163,9 @@ class StarsFeatures(object):
                     print "Error reading from DB star with identifier %d for filter %s" % (star_id, pfilter)
                     
                     stars_classes.disable_star(star_id)
+                    
+                    # Save fake feature for this star. Necessary to avoid an 
+                    # error accessing with a sequential index to a non 
+                    # existing feature. This feature wouldn't be accessed as 
+                    # this has been disabled.
+                    self.__features_all_filters[filter_index].append([])                    

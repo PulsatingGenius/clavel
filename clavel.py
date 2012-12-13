@@ -84,7 +84,7 @@ def train_and_predict(classifarg):
     """
     
     # Get the stars whose classes are known.    
-    star_classes = starclasses.StarClasses("Carpenter_ord.csv")
+    star_classes = starclasses.StarClasses(classifarg.stars_file)
     
     # Calculate the features of the stars whose identifiers are 
     # indicated and return all the features in a data structure.
@@ -135,7 +135,7 @@ def main():
         pass               
     elif ca.is_prediction():
         pass        
-    elif  ca.ca.is_evaluation():
+    elif  ca.is_evaluation():
         train_and_predict(ca)       
 
 # Run 'main' function as __main__.
