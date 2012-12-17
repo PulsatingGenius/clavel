@@ -37,7 +37,7 @@ class TrainEvalSet(object):
         
         # Names of classes.        
         self.__training_classes = []
-        # Indexes related to star_class to the stars of each class.    
+        # Indexes of the stars of each class.    
         self.__classes_indexes = []   
         # Indexes to use for training in each class.
         self.__sets_of_training_indexes_for_classes = []
@@ -65,17 +65,42 @@ class TrainEvalSet(object):
         
         instances_of_class = []
         
-        all_classes = self.__star_classes.classes
+        number_of_stars = self.__star_classes.number_of_stars
         
-        for i in range(len(all_classes)):
-            # If current star corresponds to this class and it is enabled,
-            # add it to the set of this class.
-            if ( all_classes[i] == class_name ) and \
-                ( self.__star_classes.enabled[i] == True ):
+        for i in range(number_of_stars):
+            # If current star corresponds to the class received and 
+            # it is enabled, add it to the set of this class.
+            if ( self.__star_classes.class_name(i) == class_name ) and \
+                ( self.__star_classes.is_enabled(i) == True ):
                 instances_of_class.append(i)
         
         return instances_of_class
             
+
+    def count_instances_by_class(self):
+        # Initialize variables to account for all the classes and
+        # the number of its instances.
+        unique_classes = [self.__star_classes.class_name(0)]
+        number_of_instances_by_class = [0]
+        # Count the number of instances for each class that will be considered
+        # for training.
+        for i in range(self.__star_classes.number_of_stars):
+        # Check if the star is enabled, otherwise is ignored.
+            if self.__star_classes.is_enabled(i) == True: # The instances are not ordered, so search for the class.
+                try:
+                    class_name = self.__star_classes.class_name(i)
+                    # Check if any instance of this class has been found before.
+                    current_class_index = unique_classes.index(class_name) # Count for it.
+                    number_of_instances_by_class[current_class_index] += 1
+                except ValueError:
+                    # This is the first instance of this class, add its name.
+                    unique_classes.append(class_name) # Count it as a new element.
+                    number_of_instances_by_class.append(1)
+            else:
+                print "Instance at index %d ignored for training" % i
+        
+        return unique_classes, number_of_instances_by_class
+
     def determine_classes_to_use_for_training(self):
         """ Determine the classes to be used for training depending on the
             number of instances available for each class. Count the number of
@@ -86,31 +111,7 @@ class TrainEvalSet(object):
             
         """
         
-        # Initialize variables to account for all the classes and 
-        # the number of its instances.
-        unique_classes = [self.__star_classes.classes[0]]
-        number_of_instances_by_class = [0]
-        
-        # Count the number of instances for each class that will be considered
-        # for training.
-        for i in range(len(self.__star_classes.classes)):
-            # Check if the star is enabled, otherwise is ignored.
-            if self.__star_classes.enabled[i] == True:
-                # The instances are not ordered, so search for the class.
-                try:
-                    class_name = self.__star_classes.classes[i]
-                    
-                    # Check if any instance of this class has been found before.
-                    current_class_index = unique_classes.index(class_name)
-                    # Count for it.
-                    number_of_instances_by_class[current_class_index] += 1
-                except ValueError:
-                    # This is the first instance of this class, add its name.
-                    unique_classes.append(class_name)
-                    # Count it as a new element.
-                    number_of_instances_by_class.append(1)
-            else:
-                print "Instance at index %d ignored for training" % i
+        unique_classes, number_of_instances_by_class = self.count_instances_by_class()
            
         # Check the number of instances found for each class and determine
         # if it has enough elements for training (a number of instances

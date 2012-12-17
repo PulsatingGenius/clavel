@@ -20,6 +20,7 @@ This module stores the features of a set of stars.
 
 """
 
+import os
 import database
 import lsproperties
 import lombscargle
@@ -28,18 +29,10 @@ import nonperiodicfeature
 
 class StarsFeatures(object):
     
-    def __init__(self):
-        """ Initializes variables. """
-
-        # Container for all the features of the stars in all the filters available.
-        self.__features_all_filters = []
+    def __init__(self, star_classes_):
+        """ Initializes variables. """        
         
-    @property
-    def number_of_filters(self):
-        return len(self.__features_all_filters)
-        
-    def get_filter_features(self, nfilter):
-        return self.__features_all_filters[nfilter]
+        self.__star_classes = star_classes_
         
     def save_feature(self, perfeat, noperfeat):
         """ Save the star features with all the features. """
@@ -111,7 +104,7 @@ class StarsFeatures(object):
             
         return feature          
         
-    def calculate_features(self, filename, stars_classes):
+    def calculate_features(self, filename):
         """ Calculate features of the stars. Read the light curves from
             database, calculate periodic and no periodic features and store
             all the features in a data structure that is accessed using
@@ -128,19 +121,21 @@ class StarsFeatures(object):
         
         # For each filter add an empty list to contain the features
         # of all the stars in that filter.
-        for a_filter in db.pfilters:
-            self.__features_all_filters.append([])
+        for a_filter in db.pfilters:           
+            # Adds a new filter for the set of stars.
+            self.__star_classes.add_filter(a_filter)
             
-            # Save the name of the filter in order.
-            stars_classes.add_filter_name(str(a_filter))
+        # Retrieve the information of filters created.
+        filters = self.__star_classes.filters
         
         # For all the stars in the database.
-        for star_id in stars_classes.ids:           
+        for star_index in range(self.__star_classes.number_of_stars):           
             # For all the filters of current star.
-            for filter_index in range(len(db.pfilters)):
+            for filter_index in range(len(filters)):
                 # Get the filter.
-                pfilter = db.pfilters[filter_index]
+                pfilter = filters[filter_index]
                 # Get the curve of the current star in the current filter.
+                star_id = self.__star_classes.get_instance_id(star_index)
                 curve = db.get_light_curve(star_id, pfilter)
                 # Get the object that will calculate the periodgram of the curve
                 # (not normalized).
@@ -158,14 +153,34 @@ class StarsFeatures(object):
                                     
                     # Add the features calculated in the appropriate filter
                     # data structure.
-                    self.__features_all_filters[filter_index].append(star_features_in_current_filter) 
+                    self.__star_classes.add_feature(filter_index, star_features_in_current_filter)
                 except TypeError:
                     print "Error reading from DB star with identifier %d for filter %s" % (star_id, pfilter)
                     
-                    stars_classes.disable_star(star_id)
+                    self.__star_classes.disable_star(star_id)
                     
                     # Save fake feature for this star. Necessary to avoid an 
                     # error accessing with a sequential index to a non 
                     # existing feature. This feature wouldn't be accessed as 
                     # this has been disabled.
-                    self.__features_all_filters[filter_index].append([])                    
+                    self.__star_classes.add_feature(filter_index, []) 
+                    
+        self.write_features(filename)  
+                    
+    def write_features(self, filename):
+        """ Write to disk the features calculated. """
+        
+        
+    def read_features(self, filename):
+        """ Read the features from the file . """
+        
+            
+    def get_features(self, classifarg):
+        """ . """
+        
+        if classifarg.features_file_is_given:
+            if os.path.exists(classifarg.features_file):
+                self.read_features(classifarg.features_file)
+        else:
+            self.calculate_features(classifarg.db_file)
+        

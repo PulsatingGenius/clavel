@@ -90,26 +90,26 @@ def train_and_predict(classifarg):
     # indicated and return all the features in a data structure.
     # It is done at first to detect any problem with data reading or 
     # feature calculations, so the star can be discarded.
-    stars_features = starfeatures.StarsFeatures()
-    stars_features.calculate_features(classifarg.db_file, star_classes)        
+    stars_features = starfeatures.StarsFeatures(star_classes)
+    stars_features.get_features(classifarg)        
     
     # Calculates the training and evaluation sets.
     tr_ev_sets = trainevalsets.TrainEvalSet(classifarg, star_classes)    
     tr_ev_sets.calculate_training_and_evaluation_sets()
 
     # Train and evaluate for all the filters.
-    for nfilter in range(stars_features.number_of_filters):
+    for nfilter in range(star_classes.number_of_filters):
         # Perform training
         clf = train(classifarg.number_of_trees, 
                     star_classes,
-                    tr_ev_sets,  
-                    stars_features.get_filter_features(nfilter))
+                    tr_ev_sets,
+                    star_classes.get_filter_features(nfilter))
         
         evaluation_indexes, evaluation_classes = tr_ev_sets.evaluation_indexes()
         
         # Predict.
         predicted_classes = predict(clf, evaluation_indexes, 
-                                    stars_features.get_filter_features(nfilter)) 
+                                    star_classes.get_filter_features(nfilter)) 
         
         # Evaluate prediction.
         evaluat = evaluation.Evaluation(predicted_classes, 

@@ -61,17 +61,20 @@ class ClassifierArguments(object):
         # Initiate program arguments parser.
         self.__parser = argparse.ArgumentParser()
         
-        self.__parser.add_argument('-t', metavar='training', nargs=2, dest='t', help='perform only training')
+        self.__parser.add_argument('-t', metavar=('DB_file_name', 'stars_file_name'), nargs=2, dest='t', help='Only training')
         
-        self.__parser.add_argument('-p', metavar='prediction', nargs=1, dest='p', help='perform a prediction')
+        self.__parser.add_argument('-p', metavar=('DB_file_name', 'model_file_name'), nargs=2, dest='p', help='Predict the type of stars with model indicated')
         
-        self.__parser.add_argument('-e', metavar='evaluation', nargs=2, dest='e', help='perform an evaluation')
+        self.__parser.add_argument('-e', metavar=('DB_file_name', 'stars_file_name'), nargs=2, dest='e', help='Evaluate the prediction rate success')
         
-        self.__parser.add_argument('-c', metavar='cardinal', type=int, dest='c', help='used to indicate only training')
+        self.__parser.add_argument('-c', metavar='cardinal', type=int, default ='15', dest='c', help='Minimum number of stars of a type to consider the type for training')
         
-        self.__parser.add_argument('-g', metavar='percentage', type=int, dest='g', help='percentage of instances used for training')
+        self.__parser.add_argument('-g', metavar='percentage', type=int, default ='65', dest='g', help='Percentage of instances used for training')
         
-        self.__parser.add_argument('-r', metavar='trees', type=int, dest='r', help='number of tress used in classification') 
+        self.__parser.add_argument('-r', metavar='trees', type=int, default ='50', dest='r', help='Number of tress used in classification')
+        
+        self.__parser.add_argument('-f', metavar='features_file_name', dest='f', \
+                                   help='File with the star features, if it exists the features are read from this file, instead of calculating. If the file does no exist, the features calculated are stored in the file')  
         
         self.__args = None    
         
@@ -139,3 +142,11 @@ class ClassifierArguments(object):
     @property
     def stars_file(self):
         return self.__stars_file
+    
+    @property
+    def features_file_is_given(self):
+        return self.__args.f <> None
+    
+    @property
+    def features_file(self):
+        return self.__args.f
