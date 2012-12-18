@@ -41,8 +41,10 @@ these modes are: training, prediction and evaluation.
 * Training - This mode generates a model to classify stars, 
 it uses a collection of stars. The data from stars is retrieved from a LEMON database, 
 and the information about the types of the stars is retrieved from a CSV file.
+
 * Prediction - This mode predicts the types for a set of stars using a model created 
-previously from a set of stars. 
+previously from a set of stars.
+
 * Evaluation - This mode evaluates the success of the classifier on a set of stars
 whose variability type is known. From this set, the program selects a subset of stars 
 for training and a subset of stars for evaluation. The model generated with training is
