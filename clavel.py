@@ -66,8 +66,6 @@ def predict(clf, evaluation_indexes, features):
     # To save the predictions for each instance.
     predicted_classes = []
     
-    print "evaluation_indexes %s" % evaluation_indexes
-    
     # For each instance in the evaluation set. 
     for index in evaluation_indexes:
         # Predict class for current instance.

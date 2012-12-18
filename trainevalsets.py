@@ -123,9 +123,6 @@ class TrainEvalSet(object):
                 # Save the instances of this class.
                 instances = self.get_indexes_for_class(unique_classes[i])
                 self.__classes_indexes.append(instances)
-                
-                print "Class %s used for training, %d elements, %s." \
-                    % ( unique_classes[i], len(instances), instances)
             else:
                 print "Class %s ignored for training, not enough elements." \
                     % unique_classes[i]
