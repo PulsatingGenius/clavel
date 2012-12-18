@@ -36,5 +36,4 @@ Clavel has three function modes that could be selected by means of program argum
 
 * Prediction - This mode predicts the types for a set of stars using a model created previously from a set of stars.
 
-* Evaluation - This mode evaluates the success of the classifier on a set of stars whose variability type is known. From this set, the program selects a subset of stars for training and a subset of stars for evaluation. The model generated with training is used to predict the type of the stars of the evaluation set. The comparison between the
-predicted type for each star and its actual type allows the evaluation of the classifier. 
+* Evaluation - This mode evaluates the success of the classifier on a set of stars whose variability type is known. From this set, the program selects a subset of stars for training and a subset of stars for evaluation. The model generated with training is used to predict the type of the stars of the evaluation set. The comparison between the predicted type for each star and its actual type allows the evaluation of the classifier. 
