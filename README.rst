@@ -1,14 +1,9 @@
 CLAVEL
 ======
 
-CLAVEL is a python module for LEMON (http://github/vterron/lemon/),
-to allow the classification of variable stars.
+CLAVEL is a python module for LEMON (http://github/vterron/lemon/), to allow the classification of variable stars.
 
-CLAVEL is distributed with an example that uses data from 
-'Supervised classification of variable stars (Debosscher+, 2007)' 
-that is available at 
-(http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/A+A/475/1159), 
-to show an example of classification.
+CLAVEL is distributed with an example that uses data from 'Supervised classification of variable stars (Debosscher+, 2007)' that is available at (http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/A+A/475/1159), to show an example of classification.
 
 MODULES
 =======
@@ -35,18 +30,11 @@ BASIC USE
 This software could be executed using clavel.py. There is help available typing: 
 clavel.py -h
 
-Clavel has three function modes that could be selected by means of program arguments,
-these modes are: training, prediction and evaluation.
+Clavel has three function modes that could be selected by means of program arguments, these modes are: training, prediction and evaluation.
 
-* Training - This mode generates a model to classify stars, 
-it uses a collection of stars. The data from stars is retrieved from a LEMON database, 
-and the information about the types of the stars is retrieved from a CSV file.
+* Training - This mode generates a model to classify stars, it uses a collection of stars. The data from stars is retrieved from a LEMON database, and the information about the types of the stars is retrieved from a CSV file.
 
-* Prediction - This mode predicts the types for a set of stars using a model created 
-previously from a set of stars.
+* Prediction - This mode predicts the types for a set of stars using a model created previously from a set of stars.
 
-* Evaluation - This mode evaluates the success of the classifier on a set of stars
-whose variability type is known. From this set, the program selects a subset of stars 
-for training and a subset of stars for evaluation. The model generated with training is
-used to predict the type of the stars of the evaluation set. The comparison between the
+* Evaluation - This mode evaluates the success of the classifier on a set of stars whose variability type is known. From this set, the program selects a subset of stars for training and a subset of stars for evaluation. The model generated with training is used to predict the type of the stars of the evaluation set. The comparison between the
 predicted type for each star and its actual type allows the evaluation of the classifier. 
