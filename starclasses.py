@@ -101,6 +101,9 @@ class StarClasses(object):
     @property
     def classes(self):
         return self.__stars_classes_names   
+
+    def star_identifier(self, index):
+        return self.__stars_identifiers[index]
     
     def class_name(self, index):
         return self.__stars_classes_names[index]

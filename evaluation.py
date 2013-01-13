@@ -46,7 +46,7 @@ class Evaluation(object):
         # Fill the matrix with the prediction results.
         header_row = ['']
         header_row.extend(unique_classes_name_set)
-        # Matrix for the rows, the firsr column of each row will be 
+        # Matrix for the rows, the first column of each row will be 
         # the name of the class.
         classes_rows = []  
         

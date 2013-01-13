@@ -47,7 +47,7 @@ def train(number_of_trees, star_classes, tr_ev_sets, features):
         try:
             features_of_training_set.append(features[i])
         except IndexError:
-            print "error features[i] en %d" % i
+            print "error features[i] at index %d" % i
     
     # Get the classifier.
     clf = RandomForestClassifier(number_of_trees)
@@ -129,6 +129,7 @@ def main():
     # Process program arguments.
     ca.parse()
     
+    # Performs the action indicated by the programs arguments.
     if ca.is_training():
         pass               
     elif ca.is_prediction():
