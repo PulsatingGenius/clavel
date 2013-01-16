@@ -1,7 +1,9 @@
 .project
 .pydevproject
 database.py
+methods.py
 passband.py
+style.py
 *.pyc
 *.csv
 *.txt
