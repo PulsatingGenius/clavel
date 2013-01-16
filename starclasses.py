@@ -93,10 +93,7 @@ class StarClasses(object):
         # Indicates if the star is used for training.
         self.__for_training = []
         # Indicates if the star is used for evaluation.
-        self.__for_evaluation = []        
-        
-        # Read from a file the information of stars.
-        self.read_stars_ids_and_classes()        
+        self.__for_evaluation = []             
     
     @property
     def classes(self):
@@ -204,9 +201,9 @@ class StarClasses(object):
         return self.__features_all_filters[nfilter]        
         
     def add_feature(self, filter_index, star_features):
-        """ Adds the features of a star in the filter indicated. """
+        """ Adds the features of only a star in the filter indicated. """
          
-        self.__features_all_filters[filter_index].append(star_features)
+        self.__features_all_filters[filter_index].append(star_features)         
         
     def feature(self, filter_index, feature_index):
         """ Returns the features of the star indicated by
@@ -216,4 +213,17 @@ class StarClasses(object):
         features = self.__features_all_filters[filter_index]
         
         return features[feature_index]
+    
+    def set_star_id_and_classes(self, star_ids, star_classes):
+        """ Sets the star identifiers and classes with values received. """
+        
+        self.__stars_identifiers = star_ids
+
+        self.__stars_classes_names = star_classes
+        
+        # In this case all the stars are enabled.
+        self.__enabled = [True] * len(star_classes)
+
+        # Get the list that contains the names of the classes just once.        
+        self.get_unique_classes()
         

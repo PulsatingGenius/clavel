@@ -20,9 +20,7 @@ This module stores the features of a set of stars.
 
 """
 
-import os
-import csv
-import fnmatch
+import csvdata
 import database
 import lsproperties
 import lombscargle
@@ -32,7 +30,10 @@ import nonperiodicfeature
 class StarsFeatures(object):
     
     def __init__(self, star_classes_):
-        """ Initializes variables. """        
+        """ Initializes variables. """    
+        
+        # Create objects to store metadata of CSV file and the data of the file.
+        self.META = csvdata.MetaData()     
         
         self.__star_classes = star_classes_
         
@@ -166,126 +167,24 @@ class StarsFeatures(object):
                     # existing feature. This feature wouldn't be accessed as 
                     # this has been disabled.
                     self.__star_classes.add_feature(filter_index, []) 
-        
-    def get_file_name(self, filter_name, filename):
-        """ Returns the name of the csv file constructed from the file name 
-            received and the name of the filter whose features are to be
-            saved in this file.
-            
-        """
- 
-        position = filename.index('.')
-        
-        return filename[0:position] + '_' + filter_name + '.csv'
-
-    def write_metaheader(self, csv_file, features):
-        """ Write to file a header that contains information about the type of each column. """
-        
-        features_row = features[0]
-        
-        metaheader = ['META', 'CLASS']
-        
-        metaheader.extend(['PAR'] * len(features_row))
-        
-        csv_file.writerow(metaheader)
-        
-    def write_header(self, csv_file, features):
-        """ Write to file the header with the name of the columns. """
-        
-        features_row = features[0]
-        
-        header = ['ID', 'CLASS']
-        
-        header.extend(['PAR'] * len(features_row))
-        
-        csv_file.writerow(header)        
-        
-    def write_rows(self, csv_file, features):
-        """ Write to file the features of the stars. """
-        
-        # For the features of each star.
-        for i in range(len(features)):
-            
-            # If the star is enabled (data for this star is ok).
-            if self.__star_classes.is_enabled(i):
-            
-                # Creates the row to write using the information and features of
-                # current star.
-                row = [self.__star_classes.star_identifier(i)] + \
-                    [self.__star_classes.class_name(i)] + \
-                    features[i]
-                    
-                # Writes the row to disk.
-                csv_file.writerow(row)
                     
     def write_features(self, filename):
         """ Write to file the features calculated. """
         
-        # For each filter writes its features to a different file.
-        for i in range(len(self.__star_classes.filters)):
-            current_filename = self.get_file_name(self.__star_classes.filter_name(i), filename)
-            
-            features = self.__star_classes.get_filter_features(i)
+        features_file = csvdata.FeaturesFile()    
         
-            with open(current_filename, 'wb') as csvfile:
-                
-                print "Writing features to file: " + current_filename
-                
-                csv_file = csv.writer(csvfile, delimiter=',', quotechar='"')   
-                     
-                self.write_metaheader(csv_file, features)
-                self.write_header(csv_file, features)
-                self.write_rows(csv_file, features)       
-                
-    def get_filters_names_from_filename(self, filename):
-        """ Extracts the filter name from a filename that should corresponds
-            to a features files that incorporates the filter name using the
-            format: name_filter.csv
-            The filter name is intended to be between the last '_' and last '.'.
+        features_file.write_features(filename, self.__star_classes)   
+        
+    def read_features(self, filename):
+        """ Read the features from one or more files with the file name given
+            and a suffix indicating the filter name.
             
         """
         
-        filters_names = []
-        
-        dot_rpar = filename.rpartition('.')
-        
-        if ( len(dot_rpar[0]) > 0 and len(dot_rpar[1]) > 0):
-            final_pos = len(dot_rpar[0]) + len(dot_rpar[1]) - 1
-            filename_no_ext = filename[0:final_pos]
-        
-            for afile in os.listdir('.'):
-                if fnmatch.fnmatch(afile, filename_no_ext + '*.csv'):
-                    
-                    print "Found features file: " + afile                
-                    
-                    underscore_rpar = afile.rpartition('_')                
-                    dot_rpar = afile.rpartition('.')
-                    
-                    # If the characters that mark off the filter name are found.
-                    if ( len(underscore_rpar[0]) > 0 and \
-                         len(underscore_rpar[1]) > 0 and \
-                         len(dot_rpar[0]) > 0 and \
-                         len(dot_rpar[1]) > 0 ):
-                    
-                        filtername = afile[len(underscore_rpar[0]) + \
-                                           len(underscore_rpar[1]) : \
-                                           len(dot_rpar[0]) + \
-                                           len(dot_rpar[1]) - 1]
-                            
-                        filters_names.append(filtername)
-                              
-        return filters_names      
-        
-    def read_features(self, filename):
-        """ Read the features from a file. """
-        
-        features_read = False 
-        
-        filters_names = self.get_filters_names_from_filename(filename)
-        
-        print "Filter names: %s" % filters_names
-                                
-        return features_read
+        features_file = csvdata.FeaturesFile() 
+     
+        return features_file.read_features(filename, \
+                                           self.META, self.__star_classes)
             
     def get_features(self, classifarg):
         """ Returns the features of the stars.
@@ -299,8 +198,11 @@ class StarsFeatures(object):
         if classifarg.features_file_is_given:
             # Try to read the features from a file.
             if self.read_features(classifarg.features_file) == False:
-                # If the features could not be read from a file, 
-                # calculate and write them to the features file given.
+                # If the features could not be read from a file
+                # read class information from a file.
+                self.__star_classes.read_stars_ids_and_classes()
+                 
+                # And calculate and write them to the features file given.
                 self.calculate_features(classifarg.db_file)
                 self.write_features(classifarg.features_file)       
         else:
