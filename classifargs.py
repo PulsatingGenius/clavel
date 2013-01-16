@@ -76,7 +76,7 @@ class ClassifierArguments(object):
         self.__parser.add_argument('-f', metavar='features_file_name', dest='f', \
                                    help='File with the star features, if it exists the features are read from this file, instead of calculating. If the file does no exist, the features calculated are stored in the file')
         
-        self.__parser.add_argument('-m', metavar='model_file_name', dest='f', help='File that stores the classification model')
+        self.__parser.add_argument('-m', metavar='model_file_name', dest='m', help='File that stores the classification model')
         
         self.__args = None    
         
