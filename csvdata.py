@@ -23,12 +23,14 @@ import os
 import sys
 import fnmatch
 import csv
+import logging
 
 class CsvUtil(object):
-    META = "META"
-    CLASS = "CLASS"
-    PARAM = "PAR"
-    ID = "ID"    
+    META = 'META'
+    CLASS = 'CLASS'
+    PARAM = 'PAR'
+    ID = 'ID'
+    PREDICTION = 'PREDICTION'     
     FILE_EXT = '.csv'
 
 class ColumnDef(object):
@@ -162,7 +164,7 @@ class FeaturesFile(object):
                 
         features_row = features[0]         
         
-        metaheader = [CsvUtil.META, CsvUtil.CLASS]
+        metaheader = [CsvUtil.META, CsvUtil.META]
         
         metaheader.extend([CsvUtil.PARAM] * len(features_row))
         
@@ -203,15 +205,12 @@ class FeaturesFile(object):
             saved in this file.
             
         """
- 
-        position = filename.index('.')
-        
-        return filename[0:position] + '_' + filter_name + CsvUtil.FILE_EXT                
+        return filename + '_' + filter_name + CsvUtil.FILE_EXT     
     
     def write_features(self, filename, star_classes): 
         
         # For each filter writes the features of its stars to a different file.        
-        for i in range(len(star_classes.filters)):
+        for i in range(len(star_classes.filters_names)):
             
             # Get the name of the filter.
             filter_name = star_classes.filter_name(i)
@@ -223,7 +222,7 @@ class FeaturesFile(object):
             
             with open(current_filename, 'wb') as csvfile:
                 
-                print "Writing features to file: " + current_filename
+                logging.info("Writing features to file: " + current_filename)
                 
                 csv_file = csv.writer(csvfile, delimiter=',', quotechar='"')   
                      
@@ -233,8 +232,8 @@ class FeaturesFile(object):
             
     def get_filters_names_from_filename(self, filename):
         """ Extracts the filter name from a filename that should corresponds
-            to a features files that incorporates the filter name using the
-            format: name_filter.csv
+            to a features file that incorporates the filter name using the
+            format: name_filter.ext
             The filter name is intended to be between the last '_' and last '.'.
             
         """
@@ -242,34 +241,38 @@ class FeaturesFile(object):
         files_names = []
         filters_names = []
         
-        dot_rpar = filename.rpartition('.')
+        file_name_pattern = filename + '*' + CsvUtil.FILE_EXT
+            
+        logging.info('Searching features file with pattern %s.', file_name_pattern)        
         
-        if ( len(dot_rpar[0]) > 0 and len(dot_rpar[1]) > 0):
-            final_pos = len(dot_rpar[0]) + len(dot_rpar[1]) - 1
-            filename_no_ext = filename[0:final_pos]
+        for file_found in os.listdir('.'):
+            
+            if fnmatch.fnmatch(file_found, file_name_pattern):
+                
+                files_names.append(file_found)
+                
+                logging.info("Found features file: " + file_found)                
+                
+                underscore_rpar = file_found.rpartition('_')                
+                dot_rpar = file_found.rpartition('.')
+                
+                # If the characters that mark off the filter name are found.
+                if ( len(underscore_rpar[0]) > 0 and \
+                     len(underscore_rpar[1]) > 0 and \
+                     len(dot_rpar[0]) > 0 and \
+                     len(dot_rpar[1]) > 0 ):
+                
+                    filtername = file_found[len(underscore_rpar[0]) + \
+                                       len(underscore_rpar[1]) : \
+                                       len(dot_rpar[0]) + \
+                                       len(dot_rpar[1]) - 1]
+                        
+                    filters_names.append(filtername)
         
-            for afile in os.listdir('.'):
-                if fnmatch.fnmatch(afile, filename_no_ext + '*' + CsvUtil.FILE_EXT):
-                    
-                    files_names.append(afile)
-                    
-                    print "Found features file: " + afile                
-                    
-                    underscore_rpar = afile.rpartition('_')                
-                    dot_rpar = afile.rpartition('.')
-                    
-                    # If the characters that mark off the filter name are found.
-                    if ( len(underscore_rpar[0]) > 0 and \
-                         len(underscore_rpar[1]) > 0 and \
-                         len(dot_rpar[0]) > 0 and \
-                         len(dot_rpar[1]) > 0 ):
-                    
-                        filtername = afile[len(underscore_rpar[0]) + \
-                                           len(underscore_rpar[1]) : \
-                                           len(dot_rpar[0]) + \
-                                           len(dot_rpar[1]) - 1]
-                            
-                        filters_names.append(filtername)
+        if len(files_names) > 0:               
+            logging.info('Found the following features files for filters %s' % files_names)
+        else:
+            logging.info("Features files not found.")                       
                               
         return files_names, filters_names                
             
@@ -290,7 +293,7 @@ class FeaturesFile(object):
         
         # Check if some file name has been found.
         if len(files_names) > 0:
-            print "Filter names: %s" % filters_names        
+            logging.info("Filter names: %s" % filters_names)        
         
             # The variables store the number of the columns that contains the data
             # of the stars related to their identification, class, and features.
@@ -308,8 +311,10 @@ class FeaturesFile(object):
             # For each filter read the features from its file.
             for filename, afilter in zip(files_names, filters_names):
                 
+                logging.info('Opening features file %s for filter %s' % (filename, afilter))
+                
                 # Adds a new filter for the set of stars.
-                star_classes.add_filter(afilter)
+                star_classes.add_filter_name(afilter)
     
                 # Read csv file.
                 with open(filename, 'rb') as csvfile:
@@ -319,9 +324,13 @@ class FeaturesFile(object):
                         for row in reader:
                             # First row is metadata, save it as metadata.
                             if n == 0:
+                                logging.info('Processing row of metadata.')
+                                
                                 meta.process_meta(row)
                             # Second row is column information, save it as column info.
                             elif n == 1:
+                                logging.info('Processing row of columns names.')
+                                
                                 meta.process_cols(row)
                                 
                                 # if the star information has not been saved, 
@@ -358,7 +367,10 @@ class FeaturesFile(object):
                                             
                             n += 1
                     except csv.Error as p:
+                        logging.info('Error reading file %s, line %d: %s' % (filename, reader.line_num, p)) 
                         sys.exit('Error reading file %s, line %d: %s' % (filename, reader.line_num, p))                                                     
+                        
+                logging.info("Read %d rows from file '%s'" % (n, filename)) 
                         
                 filter_index += 1  
                 

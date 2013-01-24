@@ -22,6 +22,7 @@ using the percentage of instances chosen for the training set.
 
 """   
 
+import logging
 import random
 
 class TrainEvalSet(object):    
@@ -97,7 +98,7 @@ class TrainEvalSet(object):
                     unique_classes.append(class_name) # Count it as a new element.
                     number_of_instances_by_class.append(1)
             else:
-                print "Instance at index %d ignored for training" % i
+                logging.warning("Instance at index %d ignored for training" % i)
         
         return unique_classes, number_of_instances_by_class
 
@@ -124,8 +125,8 @@ class TrainEvalSet(object):
                 instances = self.get_indexes_for_class(unique_classes[i])
                 self.__classes_indexes.append(instances)
             else:
-                print "Class %s ignored for training, not enough elements." \
-                    % unique_classes[i]
+                logging.warning("Class %s ignored for training, not enough elements." \
+                    % unique_classes[i])
 
     def calculate_training_and_evaluation_sets(self):
         """ Calculate the sets of indexes of each class to be used for
@@ -213,4 +214,18 @@ class TrainEvalSet(object):
         """     
         
         return self.__get_indexes(self.__sets_of_evaluation_indexes_for_classes)   
+    
+    def set_all_stars_for_training(self):
+        """ Selects all the stars for training. It is used when there is not 
+            evaluation, only training.
+            
+        """
+        
+        # Determine the classes and the instances of stars.
+        self.determine_classes_to_use_for_training()    
+        
+        # For the classes of all the rows get the training set for each.
+        for instances in self.__classes_indexes:
+            # Initialize sets for training of current class.                
+            self.__sets_of_training_indexes_for_classes.append(range(len(instances)))
                     

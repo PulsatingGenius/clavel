@@ -23,6 +23,9 @@ to be used for training and/or evaluation purposes.
 
 import csv
 import sys
+import csvdata
+import logging
+import database
 
 class StarClasses(object):
     
@@ -42,14 +45,16 @@ class StarClasses(object):
                 # It is not in the set, so add to it.
                 self.__unique_classes_names.append(c)    
     
-    def read_stars_ids_and_classes(self):
+    def retrieve_stars_classes_from_file(self, csv_filename):
         """ Read from a CSV file the list of star whose variability type is known.
-            These stars are used to train and evaluate the classifier.
+            These stars are used to train and/or evaluate the classifier.
             
         """        
         
+        logging.info('Reading data to identify the stars from file %s.' % csv_filename)
+        
         # Read csv file with stars identifiers and their classes.
-        with open(self.__csv_filename, 'rb') as csvfile:
+        with open(csv_filename, 'rb') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
             try:
                 # For each row in csv file.
@@ -65,17 +70,113 @@ class StarClasses(object):
                     # By default, the training is not selected for evaluation.
                     self.__for_evaluation.append(False)                    
             except csv.Error as p:
-                sys.exit('file %s, line %d: %s' % (self.__csv_filename, reader.line_num, p))  
+                sys.exit('file %s, line %d: %s' % (csv_filename, reader.line_num, p))  
                 
-        self.get_unique_classes()                
+        self.get_unique_classes()       
+        
+        logging.info('%d stars identifiers has been read from file.' % \
+                     len(self.__stars_identifiers))    
+        
+    def retrieve_stars_classes_from_database(self, database_file_name): 
+        """ Retrieve the identification of stars from a LEMON database. """   
+        
+        logging.info('Reading identifiers of stars from a LEMON database: %s' % \
+                     database_file_name)
+        
+        # Create database in LEMON format.
+        db = database.LEMONdB(database_file_name)   
+        
+        self.__stars_identifiers = db.star_ids   
+        
+        logging.info('%d stars identifiers read from LEMON database' % \
+                      len(self.__stars_identifiers))
+        
+    def get_star_info_cols(self, meta_row, header_row):
+        """ Examines the metadata and header rows to locate the columns that
+            contains the information related to identification and class 
+            of the stars. 
+            
+        """
+
+        star_id_col = -1
+        class_name_col = -1
+        
+        for i in range(len(meta_row)):
+            if meta_row[i] == csvdata.CsvUtil.META:
+                if header_row[i] == csvdata.CsvUtil.ID:
+                    star_id_col = i
+                elif header_row[i] == csvdata.CsvUtil.CLASS:
+                    class_name_col = i
+                    
+        if star_id_col < 0 or class_name_col < 0:
+            raise ValueError('Columns for identification and class of the star not found in features file')        
+        
+        return star_id_col, class_name_col
+        
+    def retrieve_stars_classes_from_features_file(self, features_file_name):
+        """ Retrieve the identification of stars from a features file 
+            generated previously. 
+            
+        """
+        logging.info("Reading data to identify the stars from features file with suffix '%s'." % features_file_name)
+        
+        n_rows = 0
+        meta_row = []
+        header_row = []
+        class_name_col = 0
+        star_id_col = 0
+             
+        # Search for files
+        features_file = csvdata.FeaturesFile()    
+        
+        files_names, filters_names = \
+            features_file.get_filters_names_from_filename(features_file_name)                        
+            
+        logging.info("Reading star information from first features file found: '%s', filter '%s'." % \
+                     (files_names[0], filters_names[0]))
+                
+        # Read csv file with stars identifiers and their classes.
+        with open(files_names[0], 'rb') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+            try:
+                # For each row in csv file.
+                for row in reader:
+                    if n_rows == 0:
+                        meta_row = row
+                    elif n_rows == 1:
+                        header_row = row
+                        
+                        # Get the number of the columns that contains the information
+                        # of the star identification and star class.
+                        star_id_col, class_name_col = self.get_star_info_cols(meta_row, header_row)                        
+                    else:                    
+                        # Add the first element of the row as the star id.
+                        self.__stars_identifiers.append(row[star_id_col])
+                        # Add the second element of the row as the star type.
+                        self.__stars_classes_names.append(row[class_name_col])
+                        # By default, the use of the star is enabled.
+                        self.__enabled.append(True)
+                        # By default, the training is not selected for training.
+                        self.__for_training.append(False)
+                        # By default, the training is not selected for evaluation.
+                        self.__for_evaluation.append(False) 
+                        
+                    n_rows += 1                   
+            except csv.Error as p:
+                sys.exit('file %s, line %d: %s' % (features_file_name, reader.line_num, p))  
+            except ValueError as e:
+                sys.exit('file %s, line %d: %s' % (features_file_name, reader.line_num, e)) 
+                
+        self.get_unique_classes()       
+        
+        logging.info('%d stars identifiers has been read from file.' % \
+                     len(self.__stars_identifiers))                 
     
-    def __init__(self, stars_info_filename_):
+    def __init__(self):
         """ Initializes variables and from the file indicated
             read star identifiers and their class names. 
             
         """
-        
-        self.__csv_filename = stars_info_filename_
         
         # Identifiers of the stars.
         self.__stars_identifiers = []
@@ -87,8 +188,8 @@ class StarClasses(object):
         # it could be disabled and the star shouldn't be used.
         self.__enabled = []
         # Filters available in source data.        
-        self.__filters = []        
-        # Container for all the features of the stars in all the filters available.
+        self.__filters_names = []        
+        # Container for all the features of the stars in all the filters_names available.
         self.__features_all_filters = []
         # Indicates if the star is used for training.
         self.__for_training = []
@@ -98,6 +199,10 @@ class StarClasses(object):
     @property
     def classes(self):
         return self.__stars_classes_names   
+    
+    @property
+    def stars_identifiers(self):
+        return self.__stars_identifiers
 
     def star_identifier(self, index):
         return self.__stars_identifiers[index]
@@ -120,19 +225,20 @@ class StarClasses(object):
         return self.__unique_classes_names
     
     def filter_name(self, nfilter):
-        return str(self.__filters[nfilter])
+        return str(self.__filters_names[nfilter])
     
-    def add_filter(self, a_filter):
+    def add_filter_name(self, a_filter):
         """ Saves the filter and adds a new list 
             to save the features of the stars in this filter.  
+            
         """
             
-        self.__filters.append(a_filter)
+        self.__filters_names.append(a_filter)
         self.__features_all_filters.append([])
         
     @property
-    def filters(self):        
-        return self.__filters
+    def filters_names(self):        
+        return self.__filters_names
     
     @property
     def number_of_filters(self):
@@ -158,7 +264,7 @@ class StarClasses(object):
             class_number = self.get_class_id(class_name)
         except ValueError:
             # This should not occur.
-            print "iden %d index %d class_name %s" % (iden, index, class_name)
+            logging.error("iden %d index %d class_name %s" % (iden, index, class_name))
             raise   
             
         return class_number 
@@ -186,19 +292,37 @@ class StarClasses(object):
     def disable_star(self, star_id):
         """ Disable the star whose identifier is indicated. """
         
-        print "Disabling star %d ..." % star_id
+        logging.warning("Disabling star %d ..." % star_id)
         try:
             # Get the index for the star identifier.
             index = self.__stars_identifiers.index(star_id)
             
             self.disable(index)
             
-            print "... at index %d" % index
+            logging.warning("... at index %d" % index)
         except ValueError:
             pass
         
     def get_filter_features(self, nfilter):
         return self.__features_all_filters[nfilter]        
+
+    def get_features_by_filter_name(self, afilter):
+        
+        features = []
+        
+        logging.info('Searching features for filter %s' % afilter)
+        
+        for i in range(len(self.__filters_names)):
+            if self.__filters_names[i] == afilter:
+                features = self.__features_all_filters[i]
+                logging.info("Found %d features for filter %s" % \
+                             (len(features), afilter))
+                break
+            
+        if len(features) == 0:
+            logging.error('Not found features for filter %s' % afilter)
+            
+        return features 
         
     def add_feature(self, filter_index, star_features):
         """ Adds the features of only a star in the filter indicated. """

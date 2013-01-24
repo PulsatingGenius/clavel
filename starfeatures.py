@@ -20,6 +20,7 @@ This module stores the features of a set of stars.
 
 """
 
+import logging
 import csvdata
 import database
 import lsproperties
@@ -105,7 +106,7 @@ class StarsFeatures(object):
         # Add flux ratio at percentile 80.
         feature.append(noperfeat.flux_percentile_ratio_mid80())    
             
-        return feature          
+        return feature   
         
     def calculate_features(self, filename):
         """ Calculate features of the stars. Read the light curves from
@@ -115,6 +116,8 @@ class StarsFeatures(object):
             in star_classes.
             
         """       
+        
+        logging.info('Opening LEMON db %s.' % filename)
         
         # Create database in LEMON format.
         db = database.LEMONdB(filename)
@@ -126,10 +129,16 @@ class StarsFeatures(object):
         # of all the stars in that filter.
         for a_filter in db.pfilters:           
             # Adds a new filter for the set of stars.
-            self.__star_classes.add_filter(a_filter)
-            
+            self.__star_classes.add_filter_name(str(a_filter))
+        
+        logging.info('Ready to read and calculate features using %d light curves from a LEMON db for filters %s.' % \
+                     (self.__star_classes.number_of_stars, self.__star_classes.filters_names) )
+        
         # Retrieve the information of filters created.
-        filters = self.__star_classes.filters
+        filters = db.pfilters        
+        
+        # Percentage of calculation completed.
+        perc_completed = 0
         
         # For all the stars in the database.
         for star_index in range(self.__star_classes.number_of_stars):           
@@ -158,7 +167,7 @@ class StarsFeatures(object):
                     # data structure.
                     self.__star_classes.add_feature(filter_index, star_features_in_current_filter)
                 except TypeError:
-                    print "Error reading from DB star with identifier %d for filter %s" % (star_id, pfilter)
+                    logging.error("Error reading from DB star with identifier %d for filter %s" % (star_id, pfilter))
                     
                     self.__star_classes.disable_star(star_id)
                     
@@ -166,10 +175,21 @@ class StarsFeatures(object):
                     # error accessing with a sequential index to a non 
                     # existing feature. This feature wouldn't be accessed as 
                     # this has been disabled.
-                    self.__star_classes.add_feature(filter_index, []) 
+                    self.__star_classes.add_feature(filter_index, [])
+                    
+            # Only to print a progress message of the calculation each 10% of advance.
+            perc = star_index * 100 / self.__star_classes.number_of_stars 
+            perc_module = perc % 10                    
+            if perc >= 10 and perc_module == 0 and perc != perc_completed :
+                logging.info('Calculating features for stars:%3.f%% done.', perc)
+                perc_completed = perc
+                     
+        logging.info('Finished the calculation of features from LEMON db.')
                     
     def write_features(self, filename):
         """ Write to file the features calculated. """
+        
+        logging.info('Writing features to file %s.' % filename)
         
         features_file = csvdata.FeaturesFile()    
         
@@ -181,31 +201,37 @@ class StarsFeatures(object):
             
         """
         
+        logging.info('Reading features from file %s.' % filename)
+        
         features_file = csvdata.FeaturesFile() 
      
         return features_file.read_features(filename, \
                                            self.META, self.__star_classes)
             
-    def get_features(self, classifarg):
+    def retrieve_features(self, classifarg):
         """ Returns the features of the stars.
-            If a file containing the features is given the features are read
+            If a file containing the features is given, the features are read
             from this file. Otherwise the features are calculated from the
             light curves stores in the LEMON database.
             
         """
+        logging.info('Getting the features of stars.')
         
         # If a file of features has been given.
-        if classifarg.features_file_is_given:
+        if classifarg.features_file_provided:            
             # Try to read the features from a file.
-            if self.read_features(classifarg.features_file) == False:
-                # If the features could not be read from a file
-                # read class information from a file.
-                self.__star_classes.read_stars_ids_and_classes()
+            if self.read_features(classifarg.features_file_name) == False:
+                
+                logging.info("Star features couldn't be read from file")
                  
                 # And calculate and write them to the features file given.
-                self.calculate_features(classifarg.db_file)
-                self.write_features(classifarg.features_file)       
+                self.calculate_features(classifarg.database_file_name)
+                
+                self.write_features(classifarg.features_file_name)       
         else:
-            # Calculate the features.
-            self.calculate_features(classifarg.db_file)
+            logging.info('Calculating star features from the light curves of LEMON database %s.' %
+                         classifarg.database_file_name)
+            
+            # Calculate the features from the light curves of a LEMON db.
+            self.calculate_features(classifarg.database_file_name)
         

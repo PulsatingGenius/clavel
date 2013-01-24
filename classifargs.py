@@ -22,6 +22,7 @@ for number and correctness, and provides these arguments to other modules.
 """
 
 import argparse
+import logging
 
 class ClassifierArguments(object):
     """ Encapsulates the processing of program arguments, the file name with
@@ -58,66 +59,49 @@ class ClassifierArguments(object):
         # Value for error return value.
         self.__error_value = -1
         
-        # Initiate program arguments parser.
+        # Initiate arguments of the parser.
         self.__parser = argparse.ArgumentParser()
         
-        self.__parser.add_argument('-t', metavar=('DB_file_name', 'stars_file_name'), nargs=2, dest='t', help='Only training')
+        self.__parser.add_argument('-t', dest='t', action='store_true', help='Training mode')
         
-        self.__parser.add_argument('-p', metavar=('DB_file_name', 'model_file_name'), nargs=2, dest='p', help='Predict the type of stars with model indicated')
+        self.__parser.add_argument('-p', metavar='suffix for the file names of predicted stars', dest='p', help='Prediction mode')
         
-        self.__parser.add_argument('-e', metavar=('DB_file_name', 'stars_file_name'), nargs=2, dest='e', help='Evaluate the prediction rate success')
+        self.__parser.add_argument('-e', dest='e', action='store_true', help='Evaluation mode')
         
         self.__parser.add_argument('-c', metavar='cardinal', type=int, default ='15', dest='c', help='Minimum number of stars of a type to consider the type for training')
         
         self.__parser.add_argument('-g', metavar='percentage', type=int, default ='65', dest='g', help='Percentage of instances used for training')
         
         self.__parser.add_argument('-r', metavar='trees', type=int, default ='50', dest='r', help='Number of trees used in classification')
+
+        self.__parser.add_argument('-s', metavar='Stars identifiers file name', dest='s', help='File that contains the stars identifiers')
         
-        self.__parser.add_argument('-f', metavar='features_file_name', dest='f', \
+        self.__parser.add_argument('-d', metavar='LEMON database file name', dest='d', help='File that contains the LEMON database')        
+        
+        self.__parser.add_argument('-f', metavar='suffix for the file names of the features', dest='f', \
                                    help='File with the star features, if it exists the features are read from this file, instead of calculating. If the file does no exist, the features calculated are stored in the file')
         
-        self.__parser.add_argument('-m', metavar='model_file_name', dest='m', help='File that stores the classification model')
+        self.__parser.add_argument('-m', metavar='model file name', dest='m', help='File to save the classification model')
+        
+        self.__parser.add_argument('-l', metavar='log file name', dest='l', help='File to save the application log')        
         
         self.__args = None    
         
-        self.__db_file = None
-        
-        self.__stars_file = None   
-        
-    def assign_files(self, file_list):
-        """ Assign the files names received assigning them to the appropriate variable
-            depending on order. First is DB and second the stars list. 
-            
-        """
-        
-        self.__db_file = file_list[0]
-        
-        self.__stars_file = file_list[1] 
-        
+    @property    
     def is_training(self):        
-        return self.__args.t <> None
+        return self.__args.t
     
+    @property
     def is_prediction(self):
         return self.__args.p <> None
     
+    @property
     def is_evaluation(self):
-        return self.__args.e <> None
-    
-    def model_file_provided(self): 
-        return self.__args.m <> None           
+        return self.__args.e
         
     def parse(self):
         
         self.__args = self.__parser.parse_args()
-        
-        if self.is_training():
-            self.assign_files(self.__args.t)
-            
-        elif self.is_prediction():
-            self.__db_file = self.__args.p[0]
-            
-        elif self.is_evaluation():
-            self.assign_files(self.__args.e) 
             
         if self.__args.c <> None:
             self.__stars_set_min_cardinal = self.__args.c
@@ -126,7 +110,49 @@ class ClassifierArguments(object):
             self.__training_set_percent = self.__args.g
             
         if self.__args.r <> None:
-            self.__number_of_trees = self.__args.r   
+            self.__number_of_trees = self.__args.r 
+            
+    @property
+    def datafile_and_stars_file_provided(self):
+        return self.stars_id_file_provided and self.database_file_provided
+            
+    def check_arguments_set(self):
+        """ Checks if the set of arguments received is coherent, i.e.,
+            arguments aren't contradictory or anything is missing.
+            
+        """
+        logging.info('Checking the coherence of program arguments received.')
+        arguments_ok = True
+          
+        # Check that only a function mode is specified.
+        if ( self.is_training and (self.is_prediction or self.is_evaluation )) or \
+            ( self.is_prediction and ( self.is_evaluation or self.is_training )) or \
+            ( self.is_evaluation and ( self.is_prediction or self.is_training )):
+            logging.error("Only one function mode is allowed, training or prediction or evaluation.")
+            arguments_ok = False
+          
+        # Check arguments for training mode.
+        if self.is_training:
+            if ( not self.datafile_and_stars_file_provided ) and \
+                 not self.features_file_provided :
+                logging.error("In training mode a features file or the pair database + stars identifiers file must be provided.")
+                arguments_ok = False
+                
+        # Check arguments for predicting mode.
+        if self.is_prediction:
+            if ( not self.datafile_and_stars_file_provided ) and \
+                 not self.features_file_provided :
+                logging.error("In predicting mode a pair of files for database and stars identifiers must be provided.")
+                arguments_ok = False  
+                
+        # Check arguments for evaluation mode.
+        if self.is_evaluation:
+            if ( not self.datafile_and_stars_file_provided ) and \
+                 not self.features_file_provided :
+                logging.error("In evaluation mode a features file or the pair database + stars identifiers file must be provided.")
+                arguments_ok = False
+          
+        return arguments_ok
     
     @property
     def stars_set_min_cardinal(self):
@@ -141,17 +167,43 @@ class ClassifierArguments(object):
         return self.__number_of_trees 
     
     @property
-    def db_file(self):
-        return self.__db_file
+    def prediction_file(self):
+        return self.__args.p
     
     @property
-    def stars_file(self):
-        return self.__stars_file
+    def database_file_provided(self):
+        return self.__args.d <> None
     
     @property
-    def features_file_is_given(self):
+    def database_file_name(self):
+        return self.__args.d
+    
+    @property
+    def features_file_provided(self):
         return self.__args.f <> None
     
     @property
-    def features_file(self):
+    def features_file_name(self):
         return self.__args.f
+    
+    def model_file_provided(self): 
+        return self.__args.m <> None      
+    
+    @property
+    def model_file_name(self):
+        return self.__args.m
+    
+    def log_file_provided(self): 
+        return self.__args.l <> None     
+    
+    @property
+    def log_file_name(self):
+        return self.__args.l           
+    
+    @property
+    def stars_id_file_provided(self): 
+        return self.__args.s <> None     
+    
+    @property
+    def stars_id_file_name(self):
+        return self.__args.s     
