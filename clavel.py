@@ -37,10 +37,16 @@ import trainevalsets
 import evaluation
 from sklearn.ensemble import RandomForestClassifier
 
-def init_log():
+def init_log(classifarg):
     """ Initializes the log for the application. """
     
-    logging.basicConfig(filename='clavel.log', format='%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+    # Initially this software is intended to be used in unix systems.
+    log_file = '/dev/null'
+    
+    if classifarg.log_file_provided:
+        log_file = classifarg.log_file_name
+    
+    logging.basicConfig(filename=log_file, format='%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
     
 def error_exit(msg): 
     """ Print a message to log and exists with the same message. """
@@ -267,17 +273,15 @@ def main():
     source. The only argument necessary is the first one, related to the
     name of the file. """
     
-    init_log()
-    
-    logging.info('----- Clavel started ---------------------------------------')
-    
     # Create object to process program arguments.
     ca = classifargs.ClassifierArguments()
     
-    logging.info('Parsing program arguments.')
-    
     # Process program arguments.
-    ca.parse() 
+    ca.parse()     
+    
+    init_log(ca)
+    
+    logging.info('----- Clavel started ---------------------------------------')
     
     # Check that all the program arguments received are coherent.
     if ca.check_arguments_set():

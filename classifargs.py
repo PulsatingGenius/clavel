@@ -62,28 +62,38 @@ class ClassifierArguments(object):
         # Initiate arguments of the parser.
         self.__parser = argparse.ArgumentParser()
         
-        self.__parser.add_argument('-t', dest='t', action='store_true', help='Training mode')
+        self.__parser.add_argument('-t', dest='t', action='store_true', 
+                                   help='Training mode')
         
-        self.__parser.add_argument('-p', metavar='suffix for the file names of predicted stars', dest='p', help='Prediction mode')
+        self.__parser.add_argument('-p', metavar='suffix for the file names of predicted stars', dest='p', 
+                                   help='Prediction mode')
         
-        self.__parser.add_argument('-e', dest='e', action='store_true', help='Evaluation mode')
+        self.__parser.add_argument('-e', dest='e', action='store_true', 
+                                   help='Evaluation mode')
         
-        self.__parser.add_argument('-c', metavar='cardinal', type=int, default ='15', dest='c', help='Minimum number of stars of a type to consider the type for training')
+        self.__parser.add_argument('-c', metavar='cardinal', type=int, default ='15', dest='c', 
+                                   help='Minimum number of stars of a type to consider the type for training')
         
-        self.__parser.add_argument('-g', metavar='percentage', type=int, default ='65', dest='g', help='Percentage of instances used for training')
+        self.__parser.add_argument('-g', metavar='percentage', type=int, default ='65', dest='g', 
+                                   help='Percentage of instances used for training')
         
-        self.__parser.add_argument('-r', metavar='trees', type=int, default ='50', dest='r', help='Number of trees used in classification')
+        self.__parser.add_argument('-r', metavar='trees', type=int, default ='50', dest='r', 
+                                   help='Number of trees used in classification')
 
-        self.__parser.add_argument('-s', metavar='Stars identifiers file name', dest='s', help='File that contains the stars identifiers')
+        self.__parser.add_argument('-s', metavar='Stars identifiers file name', dest='s', 
+                                   help='File that contains the stars identifiers')
         
-        self.__parser.add_argument('-d', metavar='LEMON database file name', dest='d', help='File that contains the LEMON database')        
+        self.__parser.add_argument('-d', metavar='LEMON database file name', dest='d', 
+                                   help='File that contains the LEMON database')        
         
         self.__parser.add_argument('-f', metavar='suffix for the file names of the features', dest='f', \
                                    help='File with the star features, if it exists the features are read from this file, instead of calculating. If the file does no exist, the features calculated are stored in the file')
         
-        self.__parser.add_argument('-m', metavar='model file name', dest='m', help='File to save the classification model')
+        self.__parser.add_argument('-m', metavar='model file name', dest='m', 
+                                   help='File to save the classification model')
         
-        self.__parser.add_argument('-l', metavar='log file name', dest='l', help='File to save the application log')        
+        self.__parser.add_argument('-l', metavar='log file name', dest='l', 
+                                   help='File to save the log messages')        
         
         self.__args = None    
         
