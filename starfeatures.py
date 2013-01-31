@@ -122,20 +122,20 @@ class StarsFeatures(object):
         # Create database in LEMON format.
         db = database.LEMONdB(filename)
         
-        # Properties for the Lomb Scargle method.
-        lsprop = lsproperties.LSProperties()        
+        # Retrieve the information of filters created.
+        filters = db.pfilters                 
         
         # For each filter add an empty list to contain the features
         # of all the stars in that filter.
-        for a_filter in db.pfilters:           
+        for a_filter in filters:           
             # Adds a new filter for the set of stars.
             self.__star_classes.add_filter_name(str(a_filter))
         
         logging.info('Ready to read and calculate features using %d light curves from a LEMON db for filters %s.' % \
-                     (self.__star_classes.number_of_stars, self.__star_classes.filters_names) )
+                     (self.__star_classes.number_of_stars, self.__star_classes.filters_names) )     
         
-        # Retrieve the information of filters created.
-        filters = db.pfilters        
+        # Properties for the Lomb Scargle method.
+        lsprop = lsproperties.LSProperties()          
         
         # Percentage of calculation completed.
         perc_completed = 0
@@ -217,21 +217,23 @@ class StarsFeatures(object):
         """
         logging.info('Getting the features of stars.')
         
-        # If a file of features has been given.
-        if classifarg.features_file_provided:            
-            # Try to read the features from a file.
-            if self.read_features(classifarg.features_file_name) == False:
-                
-                logging.info("Star features couldn't be read from file")
-                 
-                # And calculate and write them to the features file given.
-                self.calculate_features(classifarg.database_file_name)
-                
-                self.write_features(classifarg.features_file_name)       
-        else:
+        # If a database file has been given.
+        if classifarg.database_file_provided:
             logging.info('Calculating star features from the light curves of LEMON database %s.' %
                          classifarg.database_file_name)
             
             # Calculate the features from the light curves of a LEMON db.
-            self.calculate_features(classifarg.database_file_name)
+            self.calculate_features(classifarg.database_file_name)        
         
+            # If a features file has been given.
+            if classifarg.features_file_provided:
+                # Write the features to file.
+                self.write_features(classifarg.features_file_name)
+        
+        elif classifarg.features_file_provided:            
+            # Try to read the features from a file.
+            if self.read_features(classifarg.features_file_name) == False:
+                
+                logging.info("Star features couldn't be read from file")
+        else:
+            logging.info('No source has been specified to retrieve the star data.')

@@ -124,6 +124,7 @@ def retrieve_stars_features(classifarg):
     # Get the stars whose classes are known.
     star_classes = starclasses.StarClasses()  
     
+    # Get the stars identification from the source indicated by program arguments.
     if classifarg.stars_id_file_provided:
         star_classes.retrieve_stars_classes_from_file(classifarg.stars_id_file_name)
     elif classifarg.database_file_provided:
@@ -133,6 +134,9 @@ def retrieve_stars_features(classifarg):
     else:
         error_exit("It hasn't been specified an origin for the stars identification.")
     
+    if star_classes.stars_identifiers == 0:
+        error_exit('Not found any features file.')
+        
     # Calculate the features of the stars whose identifiers are
     # indicated and return all the features in a data structure.
     # It is done at first to detect any problem with data reading or
@@ -172,7 +176,7 @@ def evaluate_classifier(classifarg):
         # Evaluate prediction.
         evaluat = evaluation.Evaluation(predicted_classes, 
                                         evaluation_classes,
-                                        star_classes,
+                                        tr_ev_sets.training_classes,
                                         star_classes.filter_name(nfilter))
         
         evaluat.generate_confusion_matrix()   
@@ -231,15 +235,24 @@ def predict_stars_classes(clf, filters_names, star_classes, classifarg):
         
         features = star_classes.get_features_by_filter_name(afilter)
         
-        # Predict class for current instance.
-        predicted_classes = classifier.predict(features)
+        # To save the predictions for each instance.
+        predicted_classes = []
+        
+        # For each instance in the evaluation set. 
+        for i in range(len(features)):          
+            # Prior to predict the class of the star, check if the star is enabled.
+            if star_classes.is_enabled(i):            
+                # Predict class for current instance.
+                predicted_class = classifier.predict(features[i])
+                # Save prediction.
+                predicted_classes.append(predicted_class[0])        
         
         write_prediction_to_file(afilter, star_classes, predicted_classes, classifarg)  
         
         # Write confusion matrix.
         evaluat = evaluation.Evaluation(predicted_classes,
                                         range(len(star_classes.unique_classes_names)), 
-                                        star_classes,
+                                        star_classes.unique_classes_names,
                                         afilter)
         
         evaluat.generate_confusion_matrix()

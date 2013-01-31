@@ -52,7 +52,11 @@ class TrainEvalSet(object):
         self.__star_classes = star_classes_
         
     def get_number_of_classes(self):
-        return len(self.__num_of_instances_of_class)           
+        return len(self.__num_of_instances_of_class)
+    
+    @property
+    def training_classes(self):
+        return self.__training_classes           
         
     def __str__(self):
         return "Number of classes: %d, Minimum cardinal: %d, training_set_percent: %d" % \
@@ -79,6 +83,9 @@ class TrainEvalSet(object):
             
 
     def count_instances_by_class(self):
+        """ Count the number of instances by star class. """
+        
+        
         # Initialize variables to account for all the classes and
         # the number of its instances.
         unique_classes = [self.__star_classes.class_name(0)]
@@ -98,7 +105,7 @@ class TrainEvalSet(object):
                     unique_classes.append(class_name) # Count it as a new element.
                     number_of_instances_by_class.append(1)
             else:
-                logging.warning("Instance at index %d ignored for training" % i)
+                logging.warning("Instance at index %d disabled, so it is ignored for training" % i)
         
         return unique_classes, number_of_instances_by_class
 
@@ -119,18 +126,19 @@ class TrainEvalSet(object):
         # bigger than the minimum cardinal).
         for i in range(len(unique_classes)):                            
             if number_of_instances_by_class[i] >= self.__min_cardinal:
+                
                 # Save the class name.
                 self.__training_classes.append(unique_classes[i])
                 # Save the instances of this class.
                 instances = self.get_indexes_for_class(unique_classes[i])
                 self.__classes_indexes.append(instances)
             else:
-                logging.warning("Class %s ignored for training, not enough elements." \
-                    % unique_classes[i])
+                logging.warning("Class %s ignored for training, not enough elements %d." \
+                    % (unique_classes[i], number_of_instances_by_class[i]))
 
     def calculate_training_and_evaluation_sets(self):
         """ Calculate the sets of indexes of each class to be used for
-            training and evaluation. A a random calculation determines
+            training and evaluation. A random calculation determines
             the indexes to be used for for training and evaluation.
             These indexes are related to the position of the star in 
             star_class.
@@ -175,6 +183,17 @@ class TrainEvalSet(object):
             self.__sets_of_training_indexes_for_classes.append(training_indexes)
             self.__sets_of_evaluation_indexes_for_classes.append(evaluation_indexes)
             
+        # Log summary of training and evaluation sets.
+        logging.info('Training and evaluation sets:')
+        
+        for class_n, train_n, eval_n in \
+            zip(self.__training_classes, \
+                self.__sets_of_training_indexes_for_classes, \
+                self.__sets_of_training_indexes_for_classes):
+            
+            logging.info("Class %s, training %d, evaluation %d" % \
+                         (class_n, len(train_n), len(eval_n)))
+            
     def __get_indexes(self, sets_of_indexes): 
         """ Returns the whole set of identifiers related to the set of indexes received 
             and the numerical identifiers for each class.
@@ -189,8 +208,6 @@ class TrainEvalSet(object):
             # Get the set of indexes for current class.
             index_set = sets_of_indexes[class_index]
             instances_set = self.__classes_indexes[class_index]
-            
-            "Clase %s numero de instancias %d" % (self.__star_classes.classes[class_index], len(index_set))
             
             for i in index_set:
                 instances.append(instances_set[i])

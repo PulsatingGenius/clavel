@@ -109,7 +109,8 @@ class StarClasses(object):
                     class_name_col = i
                     
         if star_id_col < 0 or class_name_col < 0:
-            raise ValueError('Columns for identification and class of the star not found in features file')        
+            raise ValueError("Columns for identification '%d' and class '%d' of the star not found in features file" % \
+                             (star_id_col, class_name_col))        
         
         return star_id_col, class_name_col
         
@@ -118,6 +119,7 @@ class StarClasses(object):
             generated previously. 
             
         """
+        
         logging.info("Reading data to identify the stars from features file with suffix '%s'." % features_file_name)
         
         n_rows = 0
@@ -132,45 +134,46 @@ class StarClasses(object):
         files_names, filters_names = \
             features_file.get_filters_names_from_filename(features_file_name)                        
             
-        logging.info("Reading star information from first features file found: '%s', filter '%s'." % \
-                     (files_names[0], filters_names[0]))
+        if len(files_names) > 0:
+            logging.info("Reading star information from first features file found: '%s', filter '%s'." % \
+                         (files_names[0], filters_names[0]))
                 
-        # Read csv file with stars identifiers and their classes.
-        with open(files_names[0], 'rb') as csvfile:
-            reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-            try:
-                # For each row in csv file.
-                for row in reader:
-                    if n_rows == 0:
-                        meta_row = row
-                    elif n_rows == 1:
-                        header_row = row
-                        
-                        # Get the number of the columns that contains the information
-                        # of the star identification and star class.
-                        star_id_col, class_name_col = self.get_star_info_cols(meta_row, header_row)                        
-                    else:                    
-                        # Add the first element of the row as the star id.
-                        self.__stars_identifiers.append(row[star_id_col])
-                        # Add the second element of the row as the star type.
-                        self.__stars_classes_names.append(row[class_name_col])
-                        # By default, the use of the star is enabled.
-                        self.__enabled.append(True)
-                        # By default, the training is not selected for training.
-                        self.__for_training.append(False)
-                        # By default, the training is not selected for evaluation.
-                        self.__for_evaluation.append(False) 
-                        
-                    n_rows += 1                   
-            except csv.Error as p:
-                sys.exit('file %s, line %d: %s' % (features_file_name, reader.line_num, p))  
-            except ValueError as e:
-                sys.exit('file %s, line %d: %s' % (features_file_name, reader.line_num, e)) 
-                
-        self.get_unique_classes()       
-        
-        logging.info('%d stars identifiers has been read from file.' % \
-                     len(self.__stars_identifiers))                 
+            # Read csv file with stars identifiers and their classes.
+            with open(files_names[0], 'rb') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+                try:
+                    # For each row in csv file.
+                    for row in reader:
+                        if n_rows == 0:
+                            meta_row = row
+                        elif n_rows == 1:
+                            header_row = row
+                            
+                            # Get the number of the columns that contains the information
+                            # of the star identification and star class.
+                            star_id_col, class_name_col = self.get_star_info_cols(meta_row, header_row)                        
+                        else:                    
+                            # Add the first element of the row as the star id.
+                            self.__stars_identifiers.append(row[star_id_col])
+                            # Add the second element of the row as the star type.
+                            self.__stars_classes_names.append(row[class_name_col])
+                            # By default, the use of the star is enabled.
+                            self.__enabled.append(True)
+                            # By default, the training is not selected for training.
+                            self.__for_training.append(False)
+                            # By default, the training is not selected for evaluation.
+                            self.__for_evaluation.append(False) 
+                            
+                        n_rows += 1                   
+                except csv.Error as p:
+                    sys.exit('file %s, line %d: %s' % (features_file_name, reader.line_num, p))  
+                except ValueError as e:
+                    sys.exit('file %s, line %d: %s' % (features_file_name, reader.line_num, e)) 
+                    
+            self.get_unique_classes()       
+            
+            logging.info('%d stars identifiers has been read from file.' % \
+                         len(self.__stars_identifiers))             
     
     def __init__(self):
         """ Initializes variables and from the file indicated
@@ -182,7 +185,7 @@ class StarClasses(object):
         self.__stars_identifiers = []
         # Class name of the stars.
         self.__stars_classes_names = []
-        # Set that will contain the names of the classes just once.
+        # Set that will contain the names of all classes just once.
         self.__unique_classes_names = []           
         # If there is any problem reading the data of a star, 
         # it could be disabled and the star shouldn't be used.

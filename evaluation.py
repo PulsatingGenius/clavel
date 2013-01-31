@@ -25,13 +25,16 @@ import csv
 
 class Evaluation(object):           
     
-    def __init__(self, predicted_classes_, evaluation_classes_, star_classes_, outfilename_suffix_):
+    def __init__(self, predicted_classes_, evaluation_classes_, training_classes_, outfilename_suffix_):
         """ Initializes variables and evaluates the prediction. """
         
+        # Numeric values of predicted classes.
         self.__predicted_classes = predicted_classes_
-        self.__star_classes = star_classes_
+
+        self.__training_classes = training_classes_
         self.__outfilename = "conf_matrix_" + outfilename_suffix_ + ".csv"
         
+        # Numeric values of classes used for evaluation.
         self.__evaluation_classes = evaluation_classes_
         
     def generate_confusion_matrix(self):
@@ -41,7 +44,7 @@ class Evaluation(object):
         """
         
         # Get the names of the classes.
-        unique_classes_name_set = self.__star_classes.unique_classes_names        
+        unique_classes_name_set = self.__training_classes        
               
         # Fill the matrix with the prediction results.
         header_row = ['']
@@ -69,8 +72,9 @@ class Evaluation(object):
         for i in range(len(self.__evaluation_classes)):    
             # Get the index for the class evaluated.
             class_col_index = self.__evaluation_classes[i]
-            # Get the index for the class predicted, 
-            # retrieved as float so convert it to int to be used as a list index.
+            
+            # Get the index for the class predicted, it is retrieved as float
+            # so convert it to int to be used as a list index.
             class_row_index = int(self.__predicted_classes[i])
             
             # Get the row of the class predicted.
@@ -84,7 +88,7 @@ class Evaluation(object):
             total_instances[class_col_index + 1] += 1
         
         # Set the name of last the row. 
-        perc_pred_success = ["(CC)"]
+        perc_pred_success = ["(%%)"]        
             
         # Calculate the percentage of match for each class evaluated.   
         for i in range(number_of_classes_evaluated):            
@@ -98,7 +102,7 @@ class Evaluation(object):
                 
             perc_pred_success.append("%2.f" % predict_success)              
           
-        # Write the confusion matrix to a CSV file.
+        # Write the confusion matrix to file.
         with open(self.__outfilename, 'wb') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quotechar='"')
             writer.writerow(header_row)      
