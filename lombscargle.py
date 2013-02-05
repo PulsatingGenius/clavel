@@ -16,12 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module calculates the parameters for a light curve.
-Some of these parameters are derived from the curve period and other are
-statistical calculations from the curve values. 
-These parameters are intended to be used as entries for a intelligent
-system that classify automatically stars into variable classes according 
-to their periodic light variations.
+This module calculates the Lomb Scargle periodgram of a light curve.
 
 """
 
@@ -29,43 +24,62 @@ import numpy as np
 import scipy.signal
 import pylab
 
-class LombScargle(object):
-    """ Encapsulates the calculation of parameters from a light curve.
-
-This class is used as a container to calculate the periodgram of a 
-light curve using the Lomb Scargle method.
+class LSProperties(object):
+    """ This class is used as a container for the parameters used to calculate
+        the periodgram of a light curve and the proper periodgram.
 
 """
 
-    def __init__(self, id_, pfilter_, curve_, lsprop_):
-        """ Instantiation method for the LombScargle class.
+    def __init__(self, first_freq_ = 1, max_freq_to_seek_ = 10000, 
+                 freq_to_calculate_ = 100000, number_of_freq_ = 3):
+        """ Instantiation method for the CurvePeriods class.
 
 Arguments:
-curve_ - values of the light curve.
-curveperiods_ - 
+first_freq - First frequency to search.
+max_freq_to_seek - maximum frequency to calculate.
+freq_to_calculate - number of frequencies to calculate.
+max_freq - Maximum frequency calculated.
+pgram - periodgram of the light curve.
+index_max_value - indexes of the maximum values of the periodgram, these
+values are frequencies in the range of frequencies used to calculate the 
+periodgram.
 
 """
 
-        self.id = id_
-        self.pfilter = pfilter_
-        self.curve = curve_
+        self.first_freq = first_freq_  
+        self.max_freq_to_seek = max_freq_to_seek_         
+        self.freq_to_calculate = freq_to_calculate_
+        self.number_of_freq = number_of_freq_
+        self.max_freq = 0.0
+        self.index_max_values = []      
+        
+    def __str__(self):
+        """ The 'informal' string representation """
+        return "LSProperties: %s(First freq = %.2f freq to calculate = %d)" % \
+               (self.__class__.__name__, self.first_freq, self.freq_to_calculate)
+
+class LombScargle(object):
+    """ Encapsulates the calculation of parameters from a light curve.
+        This class is used as a container to calculate the periodgram 
+        of a light curve using the Lomb Scargle method.
+
+    """
+
+    def __init__(self, lsprop_):
+        """ Instantiation method for the LombScargle class.  """     
 
         self.lsprop = lsprop_
         self.max_freq_calculated = 0.0  
         self.nmags = []
         self.ntimes = []
 
-    def __str__(self):
-        """ The 'informal' string representation """
-        return "LombScargle: %s(star id = %s, filter = %s, %d measurements)" % \
-               (self.__class__.__name__, self.id, self.pfilter, len(self))
-
     def __len__(self):
-        """ Return the number of measurements for the star """
+        """ Return the number of measurements for the star. """
+        
         return len(self.curve) # number of values in the curve
 
     def get_index_max_values(self):
-        """ Calculate the maximums of the periodgram """
+        """ Calculate the maximums of the periodgram. """
 
         # During calculations the series are modified, so a numpy array copy
         # is created, as numpy functions are used in calculations.
@@ -86,6 +100,7 @@ curveperiods_ -
             self.lsprop.index_max_values.append(np.argmax(series_copy))
 
     def __plot_periodgram(self, nmags, ntimes, freqs):
+        """ Plot the periodgram. """
 
         # Se crea un array con una lista de enteros que crecen de uno en uno 
         # para representar graficamente el tiempo.
@@ -125,15 +140,15 @@ curveperiods_ -
         pylab.plot(freqs, freq_pdgram)
 
         pylab.show()
-
-    def calculate_periodgram(self, plot = False):
-        """ Calculates the periodgram using the Lomb Scargle method """
-        unix_times, mags, snrs = zip(*self.curve)
-
+        
+        
+    def calculate_periodgram_from_curve(self, unix_times, mags):
+        """ . """
+        
         # Calculates the time of each measurement as increments of time
         # regarding the time of the first measurement. First time value is 0.
         first_time = unix_times[0]
-        times = [first_time - first_time]
+        times = [first_time - first_time]  
 
         # Rest of times are increments regarding the first time.
         for i in range(1, len(unix_times)):
@@ -163,7 +178,16 @@ curveperiods_ -
         self.lsprop.pgram = scipy.signal.lombscargle(self.ntimes, self.nmags, freqs)
 
         # Get the indexes of the maximums in periodgram.
-        self.get_index_max_values() 
+        self.get_index_max_values()     
+        
+        return freqs            
+
+    def calculate_periodgram(self, pfilter, curve, plot = False):
+        """ Calculates the periodgram using the Lomb Scargle method. """
+        
+        unix_times, mags, snrs = zip(*curve)
+
+        freqs = self.calculate_periodgram_from_curve(unix_times, mags)
 
         if plot:
             self.__plot_periodgram(self.nmags, self.ntimes, freqs)

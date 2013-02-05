@@ -91,6 +91,9 @@ def train_for_evaluation(classifarg, star_classes, tr_ev_sets, nfilter):
         if classifarg.model_file_provided():  
             cm = modelserial.ClassifModel()                            
             cm.save_model(clf, classifarg.model_file_name, filter_name) 
+            
+            scm = modelserial.StarClassNames(star_classes.unique_classes_names)
+            scm.write()
                 
     return clf
 

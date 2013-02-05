@@ -23,10 +23,9 @@ This module stores the features of a set of stars.
 import logging
 import csvdata
 import database
-import lsproperties
 import lombscargle
 import periodicfeature
-import nonperiodicfeature
+import nonperiodicfeature    
 
 class StarsFeatures(object):
     
@@ -38,7 +37,8 @@ class StarsFeatures(object):
         
         self.__star_classes = star_classes_
         
-    def save_feature(self, perfeat, noperfeat):
+    @staticmethod
+    def save_feature(perfeat, noperfeat):
         """ Save the star features with all the features. """
             
         feature = []
@@ -106,7 +106,7 @@ class StarsFeatures(object):
         # Add flux ratio at percentile 80.
         feature.append(noperfeat.flux_percentile_ratio_mid80())    
             
-        return feature   
+        return feature           
         
     def calculate_features(self, filename):
         """ Calculate features of the stars. Read the light curves from
@@ -132,10 +132,11 @@ class StarsFeatures(object):
             self.__star_classes.add_filter_name(str(a_filter))
         
         logging.info('Ready to read and calculate features using %d light curves from a LEMON db for filters %s.' % \
-                     (self.__star_classes.number_of_stars, self.__star_classes.filters_names) )     
+                     (self.__star_classes.number_of_stars, self.__star_classes.filters_names) )    
         
         # Properties for the Lomb Scargle method.
-        lsprop = lsproperties.LSProperties()          
+        lsprop = lombscargle.LSProperties()  
+        ls = lombscargle.LombScargle(lsprop)
         
         # Percentage of calculation completed.
         perc_completed = 0
@@ -146,23 +147,26 @@ class StarsFeatures(object):
             for filter_index in range(len(filters)):
                 # Get the filter.
                 pfilter = filters[filter_index]
+
                 # Get the curve of the current star in the current filter.
                 star_id = self.__star_classes.get_instance_id(star_index)
+
                 curve = db.get_light_curve(star_id, pfilter)
                 # Get the object that will calculate the periodgram of the curve
                 # (not normalized).
                 try:
-                    ls = lombscargle.LombScargle(star_id, pfilter, curve, lsprop)
                     # Calculate the periodgram.
-                    pgram, nmags, ntimes = ls.calculate_periodgram()
+                    pgram, nmags, ntimes = ls.calculate_periodgram(pfilter, curve)
+
                     # Calculate periodic features of stars.
                     perfeat = periodicfeature.PeriodicFeature(pgram, lsprop)
+
                     # Calculate no periodic features of stars.
                     noperfeat = nonperiodicfeature.NonPeriodicFeature(nmags, ntimes)
-                    
+
                     # Store all the features of this star in a list.
-                    star_features_in_current_filter = self.save_feature(perfeat, noperfeat)
-                                    
+                    star_features_in_current_filter = StarsFeatures.save_feature(perfeat, noperfeat)
+      
                     # Add the features calculated in the appropriate filter
                     # data structure.
                     self.__star_classes.add_feature(filter_index, star_features_in_current_filter)

@@ -23,9 +23,6 @@ according to their periodic light variations.
 
 """
 
-import numpy as np
-import lsproperties
-
 class PeriodicFeature(object):
     """ Encapsulates the calculation of periodic parameters of a light curve.
 

@@ -23,6 +23,8 @@ import pickle
 import logging
 import os
 import fnmatch
+import csv
+import sys
 
 class ClassifModel(object):
     
@@ -69,14 +71,41 @@ class ClassifModel(object):
                         
         logging.info('Found the following model files for filters %s' % files_names)
                               
-        return files_names, filters_names       
+        return files_names, filters_names
+    
+    @staticmethod
+    def read_model_file(model_file_name):
+        """ Read from the file indicated the model as a serialized object. """
+                
+        clf = None
+               
+        try:
+            pkl_file = open(model_file_name, 'rb')
+            
+            up = pickle.Unpickler(pkl_file)
+            clf = up.load()
+            
+            pkl_file.close()
+        
+        except IOError:
+            logging.warning("Model file '%s' does not exits" % model_file_name)
+        
+        except pickle.PickleError:      
+            logging.error("Error reading model from file %s" % model_file_name)
+            
+        return clf                      
     
     def read_model(self, filename):
-        """ Read from the file indicated the model as a serialized object. """
+        """ Read the files for all the models as serialized objects.
+            Search for files with a name that matches the file name
+            received and the filter following the pattern expected
+            for the complete file name.
+        
+        """
         
         is_error = False
         
-        clf = []
+        clf_models = []
         
         logging.info('Reading classification model.')
         
@@ -88,36 +117,23 @@ class ClassifModel(object):
             
             logging.info('Reading model for filter %s from file %s.' % \
                          (current_filter, current_file))
-                         
-            try:
-                pkl_file = open(current_file, 'rb')
-                
-                # Load classifier object from file.
-                #clf.append(pickle.load(pkl_file))
-                
-                up = pickle.Unpickler(pkl_file)
-                clf.append(up.load())
-                
-                pkl_file.close()
             
-            except IOError:
-                logging.warning("Model file '%s' does not exits" % filename)
-                is_error = True
-                break
+            model = self.read_model_file(current_file)
             
-            except pickle.PickleError:
-                logging.error("Error reading model from file %s" % filename)
+            if model != None:
+                clf_models.append(model)
+            else:
                 is_error = True
                 break
             
         # If there was any error reading the model from file, remove the
-        # value of clf.
+        # value of clf_models.
         if is_error:
-            clf = None
+            clf_models = None
         else:
             logging.info('Classification model(s) read from file(s) is done.')
         
-        return clf, filters_names
+        return clf_models, filters_names
     
     def get_output_file_name(self, filename, filter_name):
         """ Returns the name of the file composed from the file name 
@@ -143,10 +159,8 @@ class ClassifModel(object):
         try:
             pkl_file = open(actual_filename, 'wb')
             
-            # Write classifier object to file.
-            #pickle.dump(clf, pkl_file)
-            
-            p = pickle.Pickler(pkl_file, protocol=pickle.HIGHEST_PROTOCOL)
+            # Write classifier object to file.           
+            p = pickle.Pickler(pkl_file, protocol = pickle.HIGHEST_PROTOCOL)
             p.dump(clf)
             
             pkl_file.close()
@@ -154,3 +168,56 @@ class ClassifModel(object):
             logging.info('File containing model saved')      
         except pickle.PickleError:
             logging.error("Error writing model to file %s" % filename)
+            
+class StarClassNames(object):
+    
+    def __init__(self, stars_classes_names_ = None):
+        
+        self.__file_name = "stars_classes.csv"
+        self.__stars_classes_names = stars_classes_names_      
+        
+    def write(self):
+        """ Write the stars classes names from a file. """
+        
+        logging.info("Writing stars classes names from file '%s'." \
+                     % self.__file_name)        
+
+        if self.__stars_classes_names != None:
+            # Write csv file.
+            with open(self.__file_name, 'wb') as csvfile:
+                
+                logging.info("Writing features to file: " + self.__file_name)
+                
+                csv_file = csv.writer(csvfile, delimiter=',', quotechar='"')
+                
+                # Write all the stars classes names to file.
+                for cl in self.__stars_classes_names:
+                    csv_file.writerow(cl)
+        else:
+            logging.warning("No stars classes names found, the file has not been written.")
+                            
+    def read(self):
+        """ Read the stars classes names from a file. """
+      
+        logging.info("Reading stars classes names from file '%s'." \
+                     % self.__file_name)
+        
+        self.__stars_classes_names = []
+        
+        # Read csv file.
+        with open(self.__file_name, 'rb') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+            try:
+                for row in reader:
+                    self.__stars_classes_names.append(row[0])
+            except csv.Error as p:
+                logging.error('Error reading file %s, line %d: %s' % \
+                              (self.__file_name, reader.line_num, p)) 
+              
+                sys.exit('Error reading file %s, line %d: %s' % \
+                         (self.__file_name, reader.line_num, p))        
+                
+        logging.info("Stars classes names read are: %s" % self.__stars_classes_names)
+        
+    def class_name(self, index):
+        return self.__stars_classes_names[index]
