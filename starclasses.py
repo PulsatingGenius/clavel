@@ -91,7 +91,7 @@ class StarClasses(object):
         logging.info('%d stars identifiers read from LEMON database' % \
                       len(self.__stars_identifiers))
         
-    def get_star_info_cols(self, meta_row, header_row):
+    def get_star_info_cols(self, header_row):
         """ Examines the metadata and header rows to locate the columns that
             contains the information related to identification and class 
             of the stars. 
@@ -101,12 +101,11 @@ class StarClasses(object):
         star_id_col = -1
         class_name_col = -1
         
-        for i in range(len(meta_row)):
-            if meta_row[i] == csvdata.CsvUtil.META:
-                if header_row[i] == csvdata.CsvUtil.ID:
-                    star_id_col = i
-                elif header_row[i] == csvdata.CsvUtil.CLASS:
-                    class_name_col = i
+        for i in range(len(header_row)):
+            if header_row[i] == csvdata.CsvUtil.ID:
+                star_id_col = i
+            elif header_row[i] == csvdata.CsvUtil.CLASS:
+                class_name_col = i
                     
         if star_id_col < 0 or class_name_col < 0:
             raise ValueError("Columns for identification '%d' and class '%d' of the star not found in features file" % \
@@ -123,7 +122,6 @@ class StarClasses(object):
         logging.info("Reading data to identify the stars from features file with suffix '%s'." % features_file_name)
         
         n_rows = 0
-        meta_row = []
         header_row = []
         class_name_col = 0
         star_id_col = 0
@@ -145,13 +143,11 @@ class StarClasses(object):
                     # For each row in csv file.
                     for row in reader:
                         if n_rows == 0:
-                            meta_row = row
-                        elif n_rows == 1:
                             header_row = row
                             
                             # Get the number of the columns that contains the information
                             # of the star identification and star class.
-                            star_id_col, class_name_col = self.get_star_info_cols(meta_row, header_row)                        
+                            star_id_col, class_name_col = self.get_star_info_cols(header_row)                        
                         else:                    
                             # Add the first element of the row as the star id.
                             self.__stars_identifiers.append(row[star_id_col])

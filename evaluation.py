@@ -88,7 +88,7 @@ class Evaluation(object):
             total_instances[class_col_index + 1] += 1
         
         # Set the name of last the row. 
-        perc_pred_success = ["(%%)"]        
+        perc_pred_success = ["(%)"]        
             
         # Calculate the percentage of match for each class evaluated.   
         for i in range(number_of_classes_evaluated):            

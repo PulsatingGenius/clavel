@@ -213,6 +213,8 @@ def write_prediction_to_file(afilter, star_classes, predicted_classes, classifar
     
     prediction_file_name = classifarg.prediction_file + '_' + afilter + csvdata.CsvUtil.FILE_EXT   
     
+    unique_classes_names = star_classes.unique_classes_names
+    
     with open(prediction_file_name, 'wb') as csvfile:
         logging.info("Writing prediction for filter %s to file: %s" % (afilter, prediction_file_name))
                 
@@ -227,7 +229,7 @@ def write_prediction_to_file(afilter, star_classes, predicted_classes, classifar
                 
         for star_id, predict in zip(stars_identifiers, predicted_classes):
             
-            row = [star_id, star_classes.class_name(int(predict))] 
+            row = [star_id, unique_classes_names[(int(predict))]] 
             csv_file.writerow(row)      
      
 def predict_stars_classes(clf, filters_names, star_classes, classifarg):

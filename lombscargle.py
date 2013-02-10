@@ -31,7 +31,7 @@ class LSProperties(object):
 """
 
     def __init__(self, first_freq_ = 1, max_freq_to_seek_ = 10000, 
-                 freq_to_calculate_ = 100000, number_of_freq_ = 3):
+                 freq_to_calculate_ = 200, number_of_freq_ = 3):
         """ Instantiation method for the CurvePeriods class.
 
 Arguments:
@@ -110,7 +110,7 @@ class LombScargle(object):
         pylab.subplot(4, 1, 1)
         pylab.xlabel('Time')
         pylab.ylabel('Amplitude')
-        pylab.plot(ntimes, nmags, 'b+')
+        pylab.plot(ntimes, nmags)
 
         # Grafica 2: instantes en los que se ha hecho cada medida, un
         # incremento en la curva es una medida, cuando es plana no hay medidas
@@ -128,8 +128,8 @@ class LombScargle(object):
 
         # Se crea un array que solo contiene los maximos.
         freq_pdgram = np.zeros(len(self.lsprop.pgram))
-        for n_imv in range(len(self.lsprop.index_max_value)):
-            index = self.lsprop.index_max_value[n_imv]
+        for n_imv in range(len(self.lsprop.index_max_values)):
+            index = self.lsprop.index_max_values[n_imv]
             freq_pdgram[index] = self.lsprop.pgram[index]     
 
         # Grafica 4: periodograma, densidad de frecuencias del espectro 
@@ -139,33 +139,69 @@ class LombScargle(object):
         pylab.ylabel('Magnitude')
         pylab.plot(freqs, freq_pdgram)
 
-        pylab.show()
+        pylab.show()    
+    
+    def discard_first_measures_far_in_time(self, unix_times):
+        """ Analyzes first measure if these are too fat in time from
+            the rest of measures. 
         
+        """
+        
+        first_measure = 0
+        
+        intervals = []
+
+        for i in range(1, len(unix_times)):
+            intervals.append(unix_times[i] - unix_times[i - 1])
+        
+        intervals_a = np.array(intervals)
+         
+        m = np.mean(intervals_a)
+        
+        i = 1
+        found = False
+        
+        while not found and i < len(intervals):
+            new_m = np.mean(intervals_a[i:])
+            dev = new_m + 0.1 * new_m 
+            
+            if m < new_m + dev and m > new_m - dev:
+                found = True
+                first_measure = i - 1
+            else:
+                m = new_m
+                
+            i += 1
+            
+        return first_measure
         
     def calculate_periodgram_from_curve(self, unix_times, mags):
-        """ . """
+        """ Calculates the periogram for one curve. """
+        
+        first_measure = self.discard_first_measures_far_in_time(unix_times)    
         
         # Calculates the time of each measurement as increments of time
         # regarding the time of the first measurement. First time value is 0.
-        first_time = unix_times[0]
-        times = [first_time - first_time]  
+        first_time = unix_times[first_measure]
+        times = [0]  
 
         # Rest of times are increments regarding the first time.
-        for i in range(1, len(unix_times)):
+        for i in range(first_measure + 1, len(unix_times)):
             times.append(unix_times[i] - first_time)
 
-        self.nmags = np.asarray(mags)
+        self.nmags = np.asarray(mags[first_measure:len(unix_times)])
         self.ntimes = np.asarray(times)
 
-        # The periodgram is calculates searching for frecuencia only in the 
+        # The periodgram is calculated searching for frecuencia only in the 
         # follwing range of frecuencies. A sample frecuency is calculated
         # using the Nyquist Theorem.
-        sample_freq = len(self.nmags) / ( unix_times[-1] - unix_times[0] )
+        sample_freq = (len(unix_times) - 1 - first_measure) / \
+            ( unix_times[-1] - unix_times[first_measure] )
 
         # The maximum frequency to search is chosen as the maximum between 
         # the calculated one and the maximum frequency received as argument.
         max_freq_seek = sample_freq / 2
-
+        
         self.lsprop.max_freq_calculated = \
             max_freq_seek if max_freq_seek > self.lsprop.max_freq_to_seek \
             else self.lsprop.max_freq_to_seek
@@ -179,7 +215,7 @@ class LombScargle(object):
 
         # Get the indexes of the maximums in periodgram.
         self.get_index_max_values()     
-        
+
         return freqs            
 
     def calculate_periodgram(self, pfilter, curve, plot = False):
@@ -187,8 +223,10 @@ class LombScargle(object):
         
         unix_times, mags, snrs = zip(*curve)
 
+        # Calculate periodgram using times and magnitudes of the curve.
         freqs = self.calculate_periodgram_from_curve(unix_times, mags)
 
+        # Plot the periodgram if indicated so.
         if plot:
             self.__plot_periodgram(self.nmags, self.ntimes, freqs)
             

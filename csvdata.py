@@ -26,7 +26,6 @@ import csv
 import logging
 
 class CsvUtil(object):
-    META = 'META'
     CLASS = 'CLASS'
     PARAM = 'PAR'
     ID = 'ID'
@@ -36,21 +35,16 @@ class CsvUtil(object):
 class ColumnDef(object):
     """ It keeps the information related to a column. """    
     
-    def __init__(self, colnumber_, type_):    
+    def __init__(self, colnumber_, colname_):    
         """ Initiation of ColumnDef objects. Only for variable assignment. """
         
         self.__colnumber = colnumber_     
-        self.__type = str(type_)
-        self.__colname = ""  
+        self.__colname = colname_  
         self.__number_of_instances = 0        
         
     @property
     def colnumber(self):
-        return self.__colnumber
-    
-    @property
-    def type(self):
-        return self.__type    
+        return self.__colnumber  
     
     @property
     def colname(self):
@@ -64,31 +58,22 @@ class ColumnDef(object):
         return self.__colname == CsvUtil.ID
         
     def is_class(self):
-        return self.__colname == CsvUtil.CLASS
-    
-    def is_param(self):
-        return self.__type == CsvUtil.PARAM    
+        return self.__colname == CsvUtil.CLASS  
         
     def __str__(self):        
-        return "Col=%s, Type=%s, Name=%s" % \
-            (self.__colnumber, self.__type, self.__colname)            
+        return "Col=%s, Name=%s" % \
+            (self.__colnumber, self.__colname)            
     
 class MetaData(object):    
     """ It keeps metadata of the set of data related to columns. """
     
     def __init__(self):            
-        self.__coldef = []     
-        
-    def process_meta(self, row):
-        n = 0
-        for c in row:
-            self.__coldef.append(ColumnDef(n, c))            
-            n += 1
+        self.__coldef = []
             
     def process_cols(self, row):   
         n = 0 
         for c in row:    
-            self.__coldef[n].colname = c
+            self.__coldef.append(ColumnDef(n, c))
             n += 1
             
     def get_col_info(self, n):
@@ -102,7 +87,7 @@ class MetaData(object):
         
         n = -1
         i = 0
-        while (i < len(self.__coldef)) and (n == -1):          
+        while (i < len(self.__coldef)) and (n == -1):       
             if self.__coldef[i].is_id():
                 n = i 
                 
@@ -138,7 +123,7 @@ class MetaData(object):
         last_column = 0
         
         for c in self.__coldef:
-            if c.is_param():
+            if not c.is_id() and not c.is_class():
                 if not range_init_found:
                     range_init_found = True
                     par_range.append(c.colnumber)
@@ -158,17 +143,6 @@ class MetaData(object):
     
 class FeaturesFile(object):
     """ Read and write features to CSV files. """
-    
-    def write_metaheader(self, csv_file, features):
-        """ Write to file a header that contains information about the type of each column. """
-                
-        features_row = features[0]         
-        
-        metaheader = [CsvUtil.META, CsvUtil.META]
-        
-        metaheader.extend([CsvUtil.PARAM] * len(features_row))
-        
-        csv_file.writerow(metaheader)
         
     def write_header(self, csv_file, features):
         """ Write to file the header with the name of the columns. """
@@ -226,7 +200,6 @@ class FeaturesFile(object):
                 
                 csv_file = csv.writer(csvfile, delimiter=',', quotechar='"')   
                      
-                self.write_metaheader(csv_file, features)
                 self.write_header(csv_file, features)
                 self.write_rows(csv_file, star_classes, features) 
             
@@ -322,13 +295,8 @@ class FeaturesFile(object):
                     try:
                         n = 0
                         for row in reader:
-                            # First row is metadata, save it as metadata.
+                            # First row is columns names.
                             if n == 0:
-                                logging.info('Processing row of metadata.')
-                                
-                                meta.process_meta(row)
-                            # Second row is column information, save it as column info.
-                            elif n == 1:
                                 logging.info('Processing row of columns names.')
                                 
                                 meta.process_cols(row)

@@ -189,7 +189,7 @@ class TrainEvalSet(object):
         for class_n, train_n, eval_n in \
             zip(self.__training_classes, \
                 self.__sets_of_training_indexes_for_classes, \
-                self.__sets_of_training_indexes_for_classes):
+                self.__sets_of_evaluation_indexes_for_classes):
             
             logging.info("Class %s, training %d, evaluation %d" % \
                          (class_n, len(train_n), len(eval_n)))

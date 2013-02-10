@@ -192,7 +192,7 @@ class StarClassNames(object):
                 
                 # Write all the stars classes names to file.
                 for cl in self.__stars_classes_names:
-                    csv_file.writerow(cl)
+                    csv_file.writerow([cl])
         else:
             logging.warning("No stars classes names found, the file has not been written.")
                             

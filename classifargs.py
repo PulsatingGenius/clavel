@@ -31,7 +31,7 @@ class ClassifierArguments(object):
     """
     
     def __init__(self, stars_set_min_cardinal_ = 15, training_set_percent_ = 65, 
-                 number_of_trees_ = 60):
+                 number_of_trees_ = 100):
         """ Initiation of ClassifierArguments objects. 
             Only for variable initialization.
         
@@ -71,10 +71,10 @@ class ClassifierArguments(object):
         self.__parser.add_argument('-e', dest='e', action='store_true', 
                                    help='Evaluation mode')
         
-        self.__parser.add_argument('-c', metavar='cardinal', type=int, default ='15', dest='c', 
+        self.__parser.add_argument('-c', metavar='cardinal', type=int, default ='25', dest='c', 
                                    help='Minimum number of stars of a type to consider the type for training')
         
-        self.__parser.add_argument('-g', metavar='percentage', type=int, default ='65', dest='g', 
+        self.__parser.add_argument('-g', metavar='percentage', type=int, default ='75', dest='g', 
                                    help='Percentage of instances used for training')
         
         self.__parser.add_argument('-r', metavar='trees', type=int, default ='50', dest='r', 
