@@ -80,7 +80,7 @@ class ClassifierArguments(object):
         self.__parser.add_argument('-r', metavar='trees', type=int, default ='50', dest='r', 
                                    help='Number of trees used in classification')
 
-        self.__parser.add_argument('-s', metavar='Stars identifiers file name', dest='s', 
+        self.__parser.add_argument('-s', metavar='name of the file with stars identifiers', dest='s', 
                                    help='File that contains the stars identifiers')
         
         self.__parser.add_argument('-d', metavar='LEMON database file name', dest='d', 
