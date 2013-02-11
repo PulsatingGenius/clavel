@@ -33,6 +33,12 @@ calculations from curve values.
 
 """
 
+    # Names of the features calculated.
+    __FUND_FREQ_FEAT_NAME = "Fund_Freq_"
+    __FUND_AMP_FEAT_NAME= "Fund_Amp_"
+    __AMP_HARM_FEAT_NAME = "Amp_Harm_"
+    __FREQ_OFFSET_FEAT_NAME = "Freq_Offset"
+
     def __init__(self, pgram_, lsprop_, num_freq_ = 3):
         """ Instantiation method for the PeriodicFeature class.
 
@@ -170,8 +176,10 @@ num_freq - number of frequencies to sample in the range of frequencies
     def get_fund_freq(self, n):
         """ Return the n maximum frequency of the periodgram. """
 
+        param_name = "%s%d" % (PeriodicFeature.__FUND_FREQ_FEAT_NAME, n)
+
         if n < self.num_freq:
-            return self.__get_freq_n(n)
+            return self.__get_freq_n(n), param_name
         else:
             msg = "Fundamental frequency requested %d is out of range (0-%d)" \
                 % (n, self.num_freq)
@@ -180,28 +188,32 @@ num_freq - number of frequencies to sample in the range of frequencies
     def get_amplitude(self, n):
         """ Return the amplitude of the n maximum frequency of periodgram """
 
-        return self.__get_amplitude_n(n)
+        param_name = "%s%d" % (PeriodicFeature.__FUND_AMP_FEAT_NAME, n)
+
+        return self.__get_amplitude_n(n), param_name
 
     def get_amplitude_firsts_harm(self, fund_freq):
         """ Return the amplitude for the three first harmonics related to the
         indicated fundamental frequency. If the harmonic does not exists in
         the periodgram, the value of amplitude returned is 0. """
-
+        
+        param_name = []
         harm_amps = []
 
         for n in range(4):
             harm_amps.append(self.__get_amp_harm_n(fund_freq, n))
+            param_name.append("%s%d" % (PeriodicFeature.__AMP_HARM_FEAT_NAME, n))
 
-        return harm_amps
+        return harm_amps, param_name
     
     def freq_y_offset(self):
         """ Calculates the offset of the values in the periodgram, this offset
             is calculated as the minimum value in the periodgram. """
-            
+                        
         offset = self.__pgram[0]
         
         for i in range(len(self.__pgram)):
             if self.__pgram[i] < offset:
                 offset = self.__pgram[i]
         
-        return offset
+        return offset, PeriodicFeature.__FREQ_OFFSET_FEAT_NAME

@@ -64,7 +64,7 @@ class Classifier(object):
         noperfeat = nonperiodicfeature.NonPeriodicFeature(nmags, ntimes)
         
         # Store all the features of this star in a list.
-        features = StarsFeatures.save_feature(perfeat, noperfeat)  
+        features, features_names = StarsFeatures.save_feature(perfeat, noperfeat)  
                    
         # Predict class.
         predicted_class = clf_model.predict(features)

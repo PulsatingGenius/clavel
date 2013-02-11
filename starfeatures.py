@@ -37,76 +37,123 @@ class StarsFeatures(object):
         
         self.__star_classes = star_classes_
         
+        self.__features_names = []
+        
     @staticmethod
     def save_feature(perfeat, noperfeat):
-        """ Save the star features with all the features. """
+        """ Save all the star features and the features names. """
             
         feature = []
+        feat_names = []
         
         # Three frequencies are used.
         for n in range(3):
             # Append frequency attribute.
-            feature.append(perfeat.get_fund_freq(n))
+            value, name = perfeat.get_fund_freq(n)
+            feature.append(value)
+            feat_names.append(name)
+            
             # Append amplitude attribute.
-            feature.append(perfeat.get_amplitude(n))
+            value, name = perfeat.get_amplitude(n)
+            feature.append(value)
+            feat_names.append(name)
+            
             # Append amplitude of three first harmonics.
-            feature.extend(perfeat.get_amplitude_firsts_harm(n))
+            value, name = perfeat.get_amplitude_firsts_harm(n)
+            feature.extend(value)
+            feat_names.extend(name)
             
         # Append frequencies offset
-        feature.append(perfeat.freq_y_offset())
+        value, name = perfeat.freq_y_offset()
+        feature.append(value)
+        feat_names.append(name)
             
         # Add difference of amplitudes        
-        feature.append(noperfeat.amplitude_dif())
+        value, name = noperfeat.amplitude_dif()
+        feature.append(value)
+        feat_names.append(name)        
                         
         # Add percentage of values beyond 1 standard deviation.
-        feature.append(noperfeat.beyond1st())
+        value, name = noperfeat.beyond1st()
+        feature.append(value)
+        feat_names.append(name)        
                         
         # Add linear trend.
-        feature.append(noperfeat.linear_trend())
+        value, name = noperfeat.linear_trend()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add maximum slope.
-        feature.append(noperfeat.max_slope())
+        value, name = noperfeat.max_slope()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add median_absolute_deviation.
-        feature.append(noperfeat.median_absolute_deviation())
+        value, name = noperfeat.median_absolute_deviation()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add percentage of values beyond 20% of median.
-        feature.append(noperfeat.median_buffer_range_percentage())
+        value, name = noperfeat.median_buffer_range_percentage()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add percentage o consecutive values with positive slope.
-        feature.append(noperfeat.pair_slope_trend())
+        value, name = noperfeat.pair_slope_trend()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add percentage of biggest difference between maximum and minimum magnitude. 
-        feature.append(noperfeat.percent_amplitude())
+        value, name = noperfeat.percent_amplitude()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add differences of magnitudes between percentile 5 and 95.
-        feature.append(noperfeat.percent_difference_flux_percentile())
+        value, name = noperfeat.percent_difference_flux_percentile()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add skew.
-        feature.append(noperfeat.skew())
+        value, name = noperfeat.skew()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add Kurtosis.
-        feature.append(noperfeat.kurtosis())
+        value, name = noperfeat.kurtosis()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add standard deviation.
-        feature.append(noperfeat.std())
+        value, name = noperfeat.std()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add flux ratio at percentile 20.
-        feature.append(noperfeat.flux_percentile_ratio_mid20())
+        value, name = noperfeat.flux_percentile_ratio_mid20()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add flux ratio at percentile 35.
-        feature.append(noperfeat.flux_percentile_ratio_mid35())
+        value, name = noperfeat.flux_percentile_ratio_mid35()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add flux ratio at percentile 50.
-        feature.append(noperfeat.flux_percentile_ratio_mid50())
+        value, name = noperfeat.flux_percentile_ratio_mid50()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add flux ratio at percentile 65.
-        feature.append(noperfeat.flux_percentile_ratio_mid65())
+        value, name = noperfeat.flux_percentile_ratio_mid65()
+        feature.append(value)
+        feat_names.append(name)        
         
         # Add flux ratio at percentile 80.
-        feature.append(noperfeat.flux_percentile_ratio_mid80())    
+        value, name = noperfeat.flux_percentile_ratio_mid80()
+        feature.append(value)
+        feat_names.append(name)
             
-        return feature           
+        return feature, feat_names
         
     def calculate_features(self, filename):
         """ Calculate features of the stars. Read the light curves from
@@ -165,7 +212,8 @@ class StarsFeatures(object):
                     noperfeat = nonperiodicfeature.NonPeriodicFeature(nmags, ntimes)
 
                     # Store all the features of this star in a list.
-                    star_features_in_current_filter = StarsFeatures.save_feature(perfeat, noperfeat)
+                    star_features_in_current_filter, self.__features_names = \
+                        StarsFeatures.save_feature(perfeat, noperfeat)
       
                     # Add the features calculated in the appropriate filter
                     # data structure.
@@ -197,7 +245,7 @@ class StarsFeatures(object):
         
         features_file = csvdata.FeaturesFile()    
         
-        features_file.write_features(filename, self.__star_classes)   
+        features_file.write_features(filename, self.__star_classes, self.__features_names)   
         
     def read_features(self, filename):
         """ Read the features from one or more files with the file name given

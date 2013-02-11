@@ -37,6 +37,25 @@ calculations from curve values.
 
 """
 
+    # Names of the features calculated.
+    __AMP_DIF_FEAT_NAME = "Amp_diff"
+    __BEY1ST_FEAT_NAME = "Beyond1st"
+    __LINEAR_TREND_FEAT_NAME = "Linear_Tren"
+    __MAX_SLOPE_FEAT_NAME = "Max_Slope"
+    __MED_ABS_DEV_FEAT_NAME = "Median_Abs_Dev"
+    __MED_BUF_RAN_PER_FEAT_NAME = "Median_Buff_Range_Percent"
+    __PAIR_SLOPE_TREND_FEAT_NAME = "Pair_Slope_Trend"
+    __PER_AMP_FEAT_NAME = "Percent_Amplitude"
+    __PER_DIF_FLUX_PER_FEAT_NAME = "Percent_Diff_flux_Percentile"
+    __SKEW_FEAT_NAME = "Skew"
+    __KURTOSIS_FEAT_NAME = "Kurtosis"
+    __STD_FEAT_NAME = "Stand_Dev"
+    __FLUX_PERC_RAT_MID20_FEAT_NAME = "Flux_Percentile_Ratio_Mid20"
+    __FLUX_PERC_RAT_MID35_FEAT_NAME = "Flux_Percentile_Ratio_Mid35"
+    __FLUX_PERC_RAT_MID50_FEAT_NAME = "Flux_Percentile_Ratio_Mid50"
+    __FLUX_PERC_RAT_MID65_FEAT_NAME = "Flux_Percentile_Ratio_Mid65"
+    __FLUX_PERC_RAT_MID80_FEAT_NAME = "Flux_Percentile_Ratio_Mid80"      
+
     def __init__(self, nmags_, ntimes_):
         """ Instantiation method for the NonPeriodicFeature class.
 
@@ -66,7 +85,7 @@ ntimes - time tics for the light curve, beginning at time 0.
         max_mag = self.nmags[np.argmax(self.nmags)]
         min_mag = self.nmags[np.argmin(self.nmags)]
 
-        return (max_mag - min_mag) / 2    
+        return (max_mag - min_mag) / 2, NonPeriodicFeature.__AMP_DIF_FEAT_NAME
 
     def beyond1st(self):
         """ Percentage of points beyond one standard deviation from the 
@@ -86,7 +105,7 @@ ntimes - time tics for the light curve, beginning at time 0.
         if ( number_of_points > 0 ):
             percentage = number_of_points * 100.0 / len(self.nmags)
 
-        return percentage
+        return percentage, NonPeriodicFeature.__BEY1ST_FEAT_NAME
 
     def linear_trend(self):
         """ Slope of a linear fit to the light curve flux. """
@@ -94,7 +113,7 @@ ntimes - time tics for the light curve, beginning at time 0.
         slope, intercept, r_value, p_value, std_err = \
             scipy.stats.linregress(self.ntimes, self.nmags)
 
-        return slope
+        return slope, NonPeriodicFeature.__LINEAR_TREND_FEAT_NAME
 
     def __interval_avg_and_std(self):
         """ Calculate average and standard deviation of time intervals. """
@@ -143,7 +162,7 @@ ntimes - time tics for the light curve, beginning at time 0.
                 if current_slope > max_slp:
                     max_slp = current_slope
 
-        return max_slp
+        return max_slp, NonPeriodicFeature.__MAX_SLOPE_FEAT_NAME
 
     def median_absolute_deviation(self):
         """ Median discrepancy of the fluxes from the median flux. """
@@ -156,7 +175,7 @@ ntimes - time tics for the light curve, beginning at time 0.
         for n in range(num_elements):
             med_calc.append(math.fabs(self.nmags[n] - median))
                        
-        return np.median(med_calc)
+        return np.median(med_calc), NonPeriodicFeature.__MED_ABS_DEV_FEAT_NAME
 
     def median_buffer_range_percentage(self):
         """ Percentage of fluxes within 10% of the amplitude from the median. """
@@ -180,7 +199,7 @@ ntimes - time tics for the light curve, beginning at time 0.
                 number_values += 1
 
         # Calculate the percentage of value out of range.
-        return number_values * 100.0 / len(self.nmags)
+        return number_values * 100.0 / len(self.nmags), NonPeriodicFeature.__MED_BUF_RAN_PER_FEAT_NAME
 
     def pair_slope_trend(self, number = 30):
         """ Percentage of all pairs of consecutive flux measurements that have 
@@ -218,7 +237,7 @@ ntimes - time tics for the light curve, beginning at time 0.
 
         # Calculate the percentage using the number of positive slopes and
         # the total number of intervals, this is the number of samples minus 1.
-        return num_positive_slopes * 100.0 / (number - 1)
+        return num_positive_slopes * 100.0 / (number - 1), NonPeriodicFeature.__PAIR_SLOPE_TREND_FEAT_NAME
     
     def percent_amplitude(self):
         """ Largest percentage difference between either the max or min 
@@ -238,7 +257,7 @@ ntimes - time tics for the light curve, beginning at time 0.
                
         max_dif = dif_max_med if dif_max_med > dif_min_med else dif_min_med
         
-        return max_dif * 100.0 / (max_mag - min_mag)
+        return max_dif * 100.0 / (max_mag - min_mag), NonPeriodicFeature.__PER_AMP_FEAT_NAME
 
     def percent_difference_flux_percentile(self):
         """ PoDifference between the 5th & 95th flux percentiles, 
@@ -247,22 +266,23 @@ ntimes - time tics for the light curve, beginning at time 0.
         percentile_05 = scipy.stats.scoreatpercentile(self.nmags, 5)
         percentile_95 = scipy.stats.scoreatpercentile(self.nmags, 95)
         
-        return np.median(self.nmags)  * 100 / (percentile_95 - percentile_05)
+        return np.median(self.nmags)  * 100 / (percentile_95 - percentile_05), \
+            NonPeriodicFeature.__PER_DIF_FLUX_PER_FEAT_NAME
 
     def skew(self):
         """ Skew of the flux. """
         
-        return scipy.stats.skew(self.nmags)
+        return scipy.stats.skew(self.nmags), NonPeriodicFeature.__SKEW_FEAT_NAME
     
     def kurtosis(self):
         """ Kurtosis of the fluxes. """
         
-        return scipy.stats.kurtosis(self.nmags)
+        return scipy.stats.kurtosis(self.nmags), NonPeriodicFeature.__KURTOSIS_FEAT_NAME
     
     def std(self):
         """ Standard deviation of the fluxes. """
         
-        return np.std(self.nmags)   
+        return np.std(self.nmags), NonPeriodicFeature.__STD_FEAT_NAME
     
     def __flux_percentile_ratio_midXX(self, lower_perc, upper_perc):
         """ The difference between upper_perc and lower_perc percentiles flux 
@@ -277,28 +297,33 @@ ntimes - time tics for the light curve, beginning at time 0.
         """ The difference between 60% and 40% flux values divided by 
             the difference between 5% and 95% flux values. """
             
-        return self.__flux_percentile_ratio_midXX(40, 60)
+        return self.__flux_percentile_ratio_midXX(40, 60), \
+            NonPeriodicFeature.__FLUX_PERC_RAT_MID20_FEAT_NAME
                     
     def flux_percentile_ratio_mid35(self):
         """ The difference between 60% and 40% flux values divided by 
             the difference between 5% and 95% flux values. """
             
-        return self.__flux_percentile_ratio_midXX(32.5, 67.5)
+        return self.__flux_percentile_ratio_midXX(32.5, 67.5), \
+            NonPeriodicFeature.__FLUX_PERC_RAT_MID35_FEAT_NAME
                     
     def flux_percentile_ratio_mid50(self):
         """ The difference between 60% and 40% flux values divided by 
             the difference between 5% and 95% flux values. """
             
-        return self.__flux_percentile_ratio_midXX(25, 75)
+        return self.__flux_percentile_ratio_midXX(25, 75), \
+            NonPeriodicFeature.__FLUX_PERC_RAT_MID50_FEAT_NAME
                     
     def flux_percentile_ratio_mid65(self):
         """ The difference between 60% and 40% flux values divided by 
             the difference between 5% and 95% flux values. """
             
-        return self.__flux_percentile_ratio_midXX(17.5, 82.5)
+        return self.__flux_percentile_ratio_midXX(17.5, 82.5), \
+            NonPeriodicFeature.__FLUX_PERC_RAT_MID65_FEAT_NAME
                     
     def flux_percentile_ratio_mid80(self):
         """ The difference between 60% and 40% flux values divided by 
             the difference between 5% and 95% flux values. """
             
-        return self.__flux_percentile_ratio_midXX(10, 90)                  
+        return self.__flux_percentile_ratio_midXX(10, 90), \
+            NonPeriodicFeature.__FLUX_PERC_RAT_MID80_FEAT_NAME                  

@@ -144,14 +144,14 @@ class MetaData(object):
 class FeaturesFile(object):
     """ Read and write features to CSV files. """
         
-    def write_header(self, csv_file, features):
+    def write_header(self, csv_file, features, features_names):
         """ Write to file the header with the name of the columns. """
 
         features_row = features[0]   
         
         header = [CsvUtil.ID, CsvUtil.CLASS]
         
-        header.extend([CsvUtil.PARAM] * len(features_row))
+        header.extend(features_names)
         
         csv_file.writerow(header)        
         
@@ -181,7 +181,7 @@ class FeaturesFile(object):
         """
         return filename + '_' + filter_name + CsvUtil.FILE_EXT     
     
-    def write_features(self, filename, star_classes): 
+    def write_features(self, filename, star_classes, features_names): 
         
         # For each filter writes the features of its stars to a different file.        
         for i in range(len(star_classes.filters_names)):
@@ -200,7 +200,7 @@ class FeaturesFile(object):
                 
                 csv_file = csv.writer(csvfile, delimiter=',', quotechar='"')   
                      
-                self.write_header(csv_file, features)
+                self.write_header(csv_file, features, features_names)
                 self.write_rows(csv_file, star_classes, features) 
             
     def get_filters_names_from_filename(self, filename):
