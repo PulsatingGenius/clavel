@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module get the training and evaluation sets from a set of data given
+This module gets the training and evaluation sets from a set of data given
 the minimum number of instances in each class to be considered for training
 using the percentage of instances chosen for the training set.
 
@@ -26,13 +26,22 @@ import logging
 import random
 
 class TrainEvalSet(object):    
-    """ Get a random training and evaluation sets from a set of data instances. 
+    """ Calculates a random training and evaluation sets from a set of data 
+        instances.
+        These sets are calculated for each class depending on the number of
+        stars in each class and according to the percentage of stars to use
+        for training. 
         
     """   
     
     def __init__(self, classifarg_, star_classes_):
         """ Initializes all the data related to training and evaluations
             sets for the instances received.
+            
+            classifarg_ - ClassifierArguments object, it contains the
+                information of all program arguments received.
+            star_classes_ - StarClasses object, it contains all the information
+                related to the stars.            
             
         """
         
@@ -65,6 +74,8 @@ class TrainEvalSet(object):
     def get_indexes_for_class(self, class_name):
         """ For a given class get the indexes of its instances.
             These indexes correspond to self.__star_classes. 
+            
+            class_name - Class name whose indexes are returned.
         
         """
         
@@ -195,29 +206,48 @@ class TrainEvalSet(object):
                          (class_n, len(train_n), len(eval_n)))
             
     def __get_indexes(self, sets_of_indexes): 
-        """ Returns the whole set of identifiers related to the set of indexes received 
-            and the numerical identifiers for each class.
+        """ It receives sets of indexes, each set corresponds to a star class.
+            The contents of each set are indexes to the list of stars 
+            of that class, which in turn corresponds to indexes to the whole 
+            list of stars. So this function receives indexes referred to the 
+            sublist of each star class and returns the indexes referred to the
+            whole list of stars.
+            
+            sets_of_indexes - A vector containing vectors of indexes for each class.
         
         """   
         
-        instances = []
+        # Contains a set of indexes of the whole lists of stars.
+        whole_stars_set_indexes = []
+        
+        # Class identifiers to return.
         class_identifiers = []
         
-        # All the classes.
+        # For all the classes.
         for class_index in range(len(self.__training_classes)):
-            # Get the set of indexes for current class.
+            
+            # From the sets received get the indexes belonging to current class.
             index_set = sets_of_indexes[class_index]
+            
+            # Get the set for all the indexes of current class.
+            # These indexes refers to the whole list of stars.
             instances_set = self.__classes_indexes[class_index]
             
+            # For all the indexes received for current class as argument.
             for i in index_set:
-                instances.append(instances_set[i])
+                
+                # Add to the set to return the actual index of this star
+                # in the list that contains all the stars. 
+                whole_stars_set_indexes.append(instances_set[i])
+                
+                # Class for this
                 class_identifiers.append(class_index) 
                 
-        return instances, class_identifiers        
+        return whole_stars_set_indexes, class_identifiers        
             
     def training_indexes(self):
         """ Returns the whole set of identifiers used for training and 
-            the numerical identifiers for each class.
+            the corresponding numerical identifier of its class.
             
         """
         
@@ -226,7 +256,7 @@ class TrainEvalSet(object):
         
     def evaluation_indexes(self):
         """ Returns the whole set of identifiers used for evaluation and 
-            the numerical identifiers for each class.
+            the corresponding numerical identifier of its class.
             
         """     
         

@@ -16,8 +16,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module process the arguments received by the classifier, check
-for number and correctness, and provides these arguments to other modules. 
+This module process the program arguments received by the classifier.
+Define the arguments available, check for its correctness, and provides 
+these arguments to other modules. 
 
 """
 
@@ -25,51 +26,61 @@ import argparse
 import logging
 
 class ClassifierArguments(object):
-    """ Encapsulates the processing of program arguments, the file name with
-        the data of stars and the some parameters for the classifying process.
+    """ Encapsulates the definition, processing and of program arguments.
         
     """
     
     def __init__(self, stars_set_min_cardinal_ = 15, training_set_percent_ = 65, 
                  number_of_trees_ = 100):
-        """ Initiation of ClassifierArguments objects. 
-            Only for variable initialization.
+        """ Initialization of variables and the object ArgumentParser 
+            with the definition of arguments to use.
         
+            stars_set_min_cardinal_ - Minimum number of stars in a variability
+                class to take into account the stars of this class for training.
+            training_set_percent_ - Percentage of stars belonging to a
+                variability class that are used for training during evaluation.
+                The rest of star are used to evaluate the prediction.
+            number_of_trees_ - Number of trees used for Random Forest algorithm.
         """   
         
-        # Limits for some values of arguments.
+        # Values used as constants.
+
         # Maximum value for the percentage of instances of each class to be 
         # used for training.
         self.__max_percent = 99
         # Maximum number of decision trees to use for classifying.
-        self.__max_trees = 200          
+        self.__max_trees = 200      
+        
+        # Initializes variables.    
                 
-        # Name of the database of light curves.
-        self.__filename = ""
         # Minimum number of instances in a class to be used for training.
         self.__stars_set_min_cardinal = stars_set_min_cardinal_
+        
         # Percentage of instances of each class to be used for training.
-        self.__training_set_percent = training_set_percent_
+        if 0 < training_set_percent_ <= self.__max_percent:
+            self.__training_set_percent = training_set_percent_
+        else:
+            self.__training_set_percent = self.__max_percent
+            logging.warn('Value of argument for training percent not valid %d, using %d' %
+                         (number_of_trees_, self.__max_trees))            
+            
         # Number of decision trees to use for classifying.
-        self.__number_of_trees = number_of_trees_  
-        
-        # Value for no error return value.
-        self.__no_error_value = 0
-        
-        # Value for error return value.
-        self.__error_value = -1
+        if 0 < number_of_trees_ <= self.__max_trees:
+            self.__number_of_trees = number_of_trees_  
+        else:
+            self.__number_of_trees = self.__max_trees
+            logging.warn('Value of argument for number of trees not valid %d, using %d' %
+                         (number_of_trees_, self.__max_trees))
         
         # Initiate arguments of the parser.
         self.__parser = argparse.ArgumentParser()
         
-        self.__parser.add_argument('-t', dest='t', action='store_true', 
-                                   help='Training mode')
+        self.__parser.add_argument('-t', dest='t', action='store_true', help='Training mode')
         
         self.__parser.add_argument('-p', metavar='suffix for the file names of predicted stars', dest='p', 
                                    help='Prediction mode')
         
-        self.__parser.add_argument('-e', dest='e', action='store_true', 
-                                   help='Evaluation mode')
+        self.__parser.add_argument('-e', dest='e', action='store_true', help='Evaluation mode')
         
         self.__parser.add_argument('-c', metavar='cardinal', type=int, default ='25', dest='c', 
                                    help='Minimum number of stars of a type to consider the type for training')
@@ -108,61 +119,6 @@ class ClassifierArguments(object):
     @property
     def is_evaluation(self):
         return self.__args.e
-        
-    def parse(self):
-        
-        self.__args = self.__parser.parse_args()
-            
-        if self.__args.c <> None:
-            self.__stars_set_min_cardinal = self.__args.c
-            
-        if self.__args.g <> None:
-            self.__training_set_percent = self.__args.g
-            
-        if self.__args.r <> None:
-            self.__number_of_trees = self.__args.r 
-            
-    @property
-    def datafile_and_stars_file_provided(self):
-        return self.stars_id_file_provided and self.database_file_provided
-            
-    def check_arguments_set(self):
-        """ Checks if the set of arguments received is coherent, i.e.,
-            arguments aren't contradictory or anything is missing.
-            
-        """
-        logging.info('Checking the coherence of program arguments received.')
-        arguments_ok = True
-          
-        # Check that only a function mode is specified.
-        if ( self.is_training and (self.is_prediction or self.is_evaluation )) or \
-            ( self.is_prediction and ( self.is_evaluation or self.is_training )) or \
-            ( self.is_evaluation and ( self.is_prediction or self.is_training )):
-            logging.error("Only one function mode is allowed, training or prediction or evaluation.")
-            arguments_ok = False
-          
-        # Check arguments for training mode.
-        if self.is_training:
-            if ( not self.datafile_and_stars_file_provided ) and \
-                 not self.features_file_provided :
-                logging.error("In training mode a features file or the pair database + stars identifiers file must be provided.")
-                arguments_ok = False
-                
-        # Check arguments for predicting mode.
-        if self.is_prediction:
-            if ( not self.datafile_and_stars_file_provided ) and \
-                 not self.features_file_provided :
-                logging.error("In predicting mode a pair of files for database and stars identifiers must be provided.")
-                arguments_ok = False  
-                
-        # Check arguments for evaluation mode.
-        if self.is_evaluation:
-            if ( not self.datafile_and_stars_file_provided ) and \
-                 not self.features_file_provided :
-                logging.error("In evaluation mode a features file or the pair database + stars identifiers file must be provided.")
-                arguments_ok = False
-          
-        return arguments_ok
     
     @property
     def stars_set_min_cardinal(self):
@@ -179,6 +135,10 @@ class ClassifierArguments(object):
     @property
     def prediction_file(self):
         return self.__args.p
+    
+    @property
+    def datafile_and_stars_file_provided(self):
+        return self.stars_id_file_provided and self.database_file_provided    
     
     @property
     def database_file_provided(self):
@@ -217,3 +177,58 @@ class ClassifierArguments(object):
     @property
     def stars_id_file_name(self):
         return self.__args.s     
+    
+    def parse(self):
+        """ Performs the parsing of program arguments using the
+            'ArgumentParser' object created in '__init__'.
+        
+        """
+        
+        self.__args = self.__parser.parse_args()
+            
+        if self.__args.c <> None:
+            self.__stars_set_min_cardinal = self.__args.c
+            
+        if self.__args.g <> None:
+            self.__training_set_percent = self.__args.g
+            
+        if self.__args.r <> None:
+            self.__number_of_trees = self.__args.r
+            
+    def check_arguments_set(self):
+        """ Checks if the set of arguments received is coherent, i.e.,
+            arguments aren't contradictory or anything is missing.
+            
+        """
+        logging.info('Checking the coherence of program arguments received.')
+        arguments_ok = True
+          
+        # Check that only a function mode is specified.
+        if ( self.is_training and (self.is_prediction or self.is_evaluation )) or \
+            ( self.is_prediction and ( self.is_evaluation or self.is_training )) or \
+            ( self.is_evaluation and ( self.is_prediction or self.is_training )):
+            logging.error("Only one function mode is allowed, training or prediction or evaluation.")
+            arguments_ok = False
+          
+        # Check arguments for training mode.
+        if self.is_training:
+            if ( not self.datafile_and_stars_file_provided ) and \
+                 not self.features_file_provided :
+                logging.error("In training mode a features file or the pair database + stars identifiers file must be provided.")
+                arguments_ok = False
+                
+        # Check arguments for predicting mode.
+        if self.is_prediction:
+            if ( not self.datafile_and_stars_file_provided ) and \
+                 not self.features_file_provided :
+                logging.error("In predicting mode a pair of files for database and stars identifiers must be provided.")
+                arguments_ok = False  
+                
+        # Check arguments for evaluation mode.
+        if self.is_evaluation:
+            if ( not self.datafile_and_stars_file_provided ) and \
+                 not self.features_file_provided :
+                logging.error("In evaluation mode a features file or the pair database + stars identifiers file must be provided.")
+                arguments_ok = False
+          
+        return arguments_ok            

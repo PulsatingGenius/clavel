@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module read from a file the classes corresponding to a list of stars 
+This module manages the classes corresponding to a list of stars 
 to be used for training and/or evaluation purposes.
 
 """
@@ -28,6 +28,11 @@ import logging
 import database
 
 class StarClasses(object):
+    """ Encapsulates the information related to the stars, stars
+        classes, filters and sets of training and evaluation stars
+        used in classification. 
+        
+    """
     
     def get_unique_classes(self):
         """ Takes the complete set of names for all the stars and
@@ -48,6 +53,8 @@ class StarClasses(object):
     def retrieve_stars_classes_from_file(self, csv_filename):
         """ Read from a CSV file the list of star whose variability type is known.
             These stars are used to train and/or evaluate the classifier.
+            
+            csv_filename - Name of the csv file to read.
             
         """        
         
@@ -78,7 +85,11 @@ class StarClasses(object):
                      len(self.__stars_identifiers))    
         
     def retrieve_stars_classes_from_database(self, database_file_name): 
-        """ Retrieve the identification of stars from a LEMON database. """   
+        """ Retrieve the identification of stars from a LEMON database.
+        
+            database_file_name - Name of the data base file to use. 
+            
+        """   
         
         logging.info('Reading identifiers of stars from a LEMON database: %s' % \
                      database_file_name)
@@ -95,6 +106,8 @@ class StarClasses(object):
         """ Examines the metadata and header rows to locate the columns that
             contains the information related to identification and class 
             of the stars. 
+            
+            header_row - Row containing the names of the columns.
             
         """
 
@@ -116,6 +129,8 @@ class StarClasses(object):
     def retrieve_stars_classes_from_features_file(self, features_file_name):
         """ Retrieve the identification of stars from a features file 
             generated previously. 
+            
+            features_file_name - Name of the file that contains the features.
             
         """
         
@@ -247,29 +262,40 @@ class StarClasses(object):
         """ For a class name return an numerical identifier.
             This numerical identifier corresponds to the position
             that the class name has in the list of unique class name.
+            
+            class_name - Class name whose index is returned.
          
         """
         return self.__unique_classes_names.index(class_name)        
     
-    def get_class_number_from_id(self, iden):
-        """ For a star identifier return the class number. """
+    def get_class_number_from_id(self, star_id):
+        """ For a star identifier return the class number. 
+        
+            star_id - Identifier of the star to return.
+        
+        """
         
         try:
             # Search the index for the identifier.
-            index = self.__stars_identifiers[iden]
+            index = self.__stars_identifiers[star_id]
             # Get the name of its class.
             class_name = self.__stars_classes_names[index]
             # Search the index for this class name.
             class_number = self.get_class_id(class_name)
         except ValueError:
             # This should not occur.
-            logging.error("iden %d index %d class_name %s" % (iden, index, class_name))
+            logging.error("star_id %d index %d class_name %s" % (star_id, index, class_name))
             raise   
             
         return class_number 
 
     def get_class_numbers_from_ids(self, stars_ids):
-        """ For the stars identifiers received returns the class's number. """
+        """ For the stars identifiers received returns the class's number.
+        
+            stars_ids - Set of stars identifiers whose class indexes 
+                are returned. 
+        
+        """
          
         class_numbers = [] 
          
@@ -306,6 +332,7 @@ class StarClasses(object):
         return self.__features_all_filters[nfilter]        
 
     def get_features_by_filter_name(self, afilter):
+        """ Return the features of the filter indicated. """
         
         features = []
         
@@ -324,13 +351,21 @@ class StarClasses(object):
         return features 
         
     def add_feature(self, filter_index, star_features):
-        """ Adds the features of only a star in the filter indicated. """
+        """ Adds the features of only a star in the filter indicated. 
+        
+            filter_index - Index of the filter to use.
+            star_features - Feature to add.
+            
+        """
          
         self.__features_all_filters[filter_index].append(star_features)         
         
     def feature(self, filter_index, feature_index):
         """ Returns the features of the star indicated by
             the index of the filter and the index of the star.
+            
+            filter_index - Index of the filter to use.
+            star_features - Feature to add.
                         
         """
         features = self.__features_all_filters[filter_index]
@@ -338,7 +373,13 @@ class StarClasses(object):
         return features[feature_index]
     
     def set_star_id_and_classes(self, star_ids, star_classes):
-        """ Sets the star identifiers and classes with values received. """
+        """ Sets the star identifiers and classes with values received.
+        
+            star_ids - Star identifiers to set.
+            star_classes - StarClasses object, it contains all the information
+                related to the stars.
+        
+        """
         
         self.__stars_identifiers = star_ids
 

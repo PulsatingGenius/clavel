@@ -26,16 +26,21 @@ import csv
 class Evaluation(object):           
     
     def __init__(self, predicted_classes_, evaluation_classes_, training_classes_, outfilename_suffix_):
-        """ Initializes variables and evaluates the prediction. """
+        """ Initializes variables and evaluates the prediction.
         
-        # Numeric values of predicted classes.
+            predicted_classes_ - Numeric values of predicted classes.
+            evaluation_classes_ - Indexes of the classes used for evaluation. 
+                Index related to the list of classes read.
+            training_classes_ - Indexes of the classes used for training.
+                Index related to the list of classes read.
+            outfilename_suffix_ - Suffix to use for the file of the confusion matrix.
+        
+        """
+        
         self.__predicted_classes = predicted_classes_
-
+        self.__evaluation_classes = evaluation_classes_
         self.__training_classes = training_classes_
         self.__outfilename = "conf_matrix_" + outfilename_suffix_ + ".csv"
-        
-        # Numeric values of classes used for evaluation.
-        self.__evaluation_classes = evaluation_classes_
         
     def generate_confusion_matrix(self):
         """ Generate the confusion matrix with the results of the prediction. 

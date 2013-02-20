@@ -36,7 +36,11 @@ class ColumnDef(object):
     """ It keeps the information related to a column. """    
     
     def __init__(self, colnumber_, colname_):    
-        """ Initiation of ColumnDef objects. Only for variable assignment. """
+        """ Initiation of ColumnDef objects. Only for variable assignment. 
+        
+            colnumber_ - Number related to the position of the column.
+            colname_ - Name of the column.
+        """
         
         self.__colnumber = colnumber_     
         self.__colname = colname_  
@@ -65,18 +69,32 @@ class ColumnDef(object):
             (self.__colnumber, self.__colname)            
     
 class MetaData(object):    
-    """ It keeps metadata of the set of data related to columns. """
+    """ It keeps information related to the columns of a table. """
     
     def __init__(self):            
         self.__coldef = []
             
-    def process_cols(self, row):   
-        n = 0 
+    def process_cols(self, row):
+        """ Process the row received as information related to the columns.
+        
+            row - A row whose elements are processed as column names.
+        
+        """
+           
+        n = 0
+         
+        # For each element in the row adds a new column definition.
         for c in row:    
             self.__coldef.append(ColumnDef(n, c))
             n += 1
             
     def get_col_info(self, n):
+        """ Returns the information of the column at position n. 
+        
+            n - Number of the column whose information is returned.
+        
+        """        
+        
         if n >= len(self.__coldef):
             raise IndexError("There is not a column number %d" % n)
         else:
@@ -87,6 +105,9 @@ class MetaData(object):
         
         n = -1
         i = 0
+        
+        # Look for a column with the name that corresponds to the name of the
+        # id column.
         while (i < len(self.__coldef)) and (n == -1):       
             if self.__coldef[i].is_id():
                 n = i 
@@ -103,6 +124,9 @@ class MetaData(object):
                 
         n = -1
         i = 0
+        
+        # Look for a column with the name that corresponds to the name of the 
+        # class column.        
         while (i < len(self.__coldef)) and (n == -1):
             if self.__coldef[i].is_class():
                 n = i 
@@ -115,13 +139,21 @@ class MetaData(object):
             return n        
         
     def get_range_of_params(self):
-        """ Get the range of columns that contains parameters. """
+        """ Get the range of columns that contains parameters.
+            It is assumed that all the columns containing parameters are 
+            contiguous, otherwise it is not possible to calculate a range.
+        
+        """
+        
         par_range = []
         
         range_init_found = False
         
         last_column = 0
         
+        # Calculate the range looking for the first column that is not
+        # the id nor the class, and add the following columns until the
+        # end, the id column or the class column is reached. 
         for c in self.__coldef:
             if not c.is_id() and not c.is_class():
                 if not range_init_found:
@@ -144,10 +176,13 @@ class MetaData(object):
 class FeaturesFile(object):
     """ Read and write features to CSV files. """
         
-    def write_header(self, csv_file, features, features_names):
-        """ Write to file the header with the name of the columns. """
-
-        features_row = features[0]   
+    def write_header(self, csv_file, features_names):
+        """ Write to file the header with the name of the columns.
+        
+            csv_file - csv file used to write the header.
+            features_names - The names of the features to include in the header.
+             
+        """
         
         header = [CsvUtil.ID, CsvUtil.CLASS]
         
@@ -156,7 +191,14 @@ class FeaturesFile(object):
         csv_file.writerow(header)        
         
     def write_rows(self, csv_file, star_classes, features):
-        """ Write to file the features of the stars. """
+        """ Write to file the features of the stars.
+        
+            csv_file - csv file used to write the header.
+            star_classes - StarClasses object, it contains all the information
+                related to the stars.             
+            features - Features to write in the csv file.        
+         
+        """
         
         # For the features of each star.
         for i in range(len(features)):
@@ -178,10 +220,20 @@ class FeaturesFile(object):
             received and the name of the filter whose features are to be
             saved in this file.
             
+            filter_name - Name of the filter to add as suffix to the file name.
+            filename - Prefix of the file name.
+            
         """
         return filename + '_' + filter_name + CsvUtil.FILE_EXT     
     
     def write_features(self, filename, star_classes, features_names): 
+        """ 
+        
+            filename - Name of the file to write the features.
+            star_classes - StarClasses object, it contains all the information
+                related to the stars.
+            features_names - Names of the features to write.
+        """
         
         # For each filter writes the features of its stars to a different file.        
         for i in range(len(star_classes.filters_names)):
@@ -200,7 +252,7 @@ class FeaturesFile(object):
                 
                 csv_file = csv.writer(csvfile, delimiter=',', quotechar='"')   
                      
-                self.write_header(csv_file, features, features_names)
+                self.write_header(csv_file, features_names)
                 self.write_rows(csv_file, star_classes, features) 
             
     def get_filters_names_from_filename(self, filename):
@@ -208,6 +260,8 @@ class FeaturesFile(object):
             to a features file that incorporates the filter name using the
             format: name_filter.ext
             The filter name is intended to be between the last '_' and last '.'.
+            
+            filename - File name to use.
             
         """
         
@@ -252,8 +306,14 @@ class FeaturesFile(object):
     def read_features(self, filename, meta, star_classes):
         """ Read information of stars from one or more CVS files.
             The information contains identification, class, and features of stars.
-            The names of the files are constructed from the file name received
-            and
+            It could exists several files, one per filter, so a file related to
+            each filter is used. The names of the files are constructed from the 
+            file name received and the filter name.
+            
+            filename - Name of the file to read.
+            meta - Information of the columns contained in the file.
+            star_classes - StarClasses object, it contains all the information
+                related to the stars.
         
         """
         

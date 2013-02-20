@@ -34,17 +34,17 @@ class LSProperties(object):
                  freq_to_calculate_ = 200, number_of_freq_ = 3):
         """ Instantiation method for the CurvePeriods class.
 
-Arguments:
-first_freq - First frequency to search.
-max_freq_to_seek - maximum frequency to calculate.
-freq_to_calculate - number of frequencies to calculate.
-max_freq - Maximum frequency calculated.
-pgram - periodgram of the light curve.
-index_max_value - indexes of the maximum values of the periodgram, these
-values are frequencies in the range of frequencies used to calculate the 
-periodgram.
-
-"""
+            Arguments:
+            first_freq - First frequency to search.
+            max_freq_to_seek - maximum frequency to calculate.
+            freq_to_calculate - number of frequencies to calculate.
+            max_freq - Maximum frequency calculated.
+            pgram - periodgram of the light curve.
+            index_max_value - indexes of the maximum values of the periodgram, these
+            values are frequencies in the range of frequencies used to calculate the 
+            periodgram.
+            
+        """
 
         self.first_freq = first_freq_  
         self.max_freq_to_seek = max_freq_to_seek_         
@@ -55,6 +55,7 @@ periodgram.
         
     def __str__(self):
         """ The 'informal' string representation """
+        
         return "LSProperties: %s(First freq = %.2f freq to calculate = %d)" % \
                (self.__class__.__name__, self.first_freq, self.freq_to_calculate)
 
@@ -66,7 +67,11 @@ class LombScargle(object):
     """
 
     def __init__(self, lsprop_):
-        """ Instantiation method for the LombScargle class.  """     
+        """ Instantiation method for the LombScargle class. 
+        
+            lsprop_ - Parameters to use to calculate the Lomb Scargle periodgram.
+        
+        """     
 
         self.lsprop = lsprop_
         self.max_freq_calculated = 0.0  
@@ -100,7 +105,13 @@ class LombScargle(object):
             self.lsprop.index_max_values.append(np.argmax(series_copy))
 
     def __plot_periodgram(self, nmags, ntimes, freqs):
-        """ Plot the periodgram. """
+        """ Plot the periodgram. 
+        
+            nmags - Serie of magnitudes measured for a star.
+            ntimes - Times when the magnitudes have been measured.
+            freqs - Frequencies of the periodgram.
+        
+        """
 
         # Se crea un array con una lista de enteros que crecen de uno en uno 
         # para representar graficamente el tiempo.
@@ -143,7 +154,9 @@ class LombScargle(object):
     
     def discard_first_measures_far_in_time(self, unix_times):
         """ Analyzes first measure if these are too fat in time from
-            the rest of measures. 
+            the rest of measures.
+            
+            unix_times - Times (in unix times) when the magnitudes have been measured.
         
         """
         
@@ -175,8 +188,13 @@ class LombScargle(object):
             
         return first_measure
         
-    def calculate_periodgram_from_curve(self, unix_times, mags):
-        """ Calculates the periogram for one curve. """
+    def calculate_periodgram_from_curve(self, mags, unix_times):
+        """ Calculates the periogram for one curve.
+        
+            mags - Serie of magnitudes measured for the star.
+            unix_times - Times (in unix times) when the magnitudes have been measured.
+        
+        """
         
         first_measure = self.discard_first_measures_far_in_time(unix_times)    
         
@@ -219,12 +237,18 @@ class LombScargle(object):
         return freqs            
 
     def calculate_periodgram(self, pfilter, curve, plot = False):
-        """ Calculates the periodgram using the Lomb Scargle method. """
+        """ Calculates the periodgram using the Lomb Scargle method.
+        
+            pfilter - Filter used for these measures.
+            curve - Values of the curve.
+            plot - It asks to plot a graph for the curve received.
+        
+        """
         
         unix_times, mags, snrs = zip(*curve)
 
         # Calculate periodgram using times and magnitudes of the curve.
-        freqs = self.calculate_periodgram_from_curve(unix_times, mags)
+        freqs = self.calculate_periodgram_from_curve(mags, unix_times)
 
         # Plot the periodgram if indicated so.
         if plot:

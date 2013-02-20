@@ -16,22 +16,20 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module calculates the parameters for a light curve derived from the 
-periodgram.These parameters are intended to be used as entries for a 
-intelligent system that classify automatically stars into variable classes 
-according to their periodic light variations.
+This module calculates the features for a light curve derived from the 
+periodgram.These parameters are intended to be used as entries to a system 
+that classifies automatically stars into variable classes according to their
+periodic light variations.
 
 """
 
 class PeriodicFeature(object):
-    """ Encapsulates the calculation of periodic parameters of a light curve.
+    """ Encapsulates the calculation of periodic features of a light curve.
 
-This class is used as a container for the calculation of periodic parameters
-from a light curve. It calculates two groups of parameters, a group based in 
-periodic changes in the light curve and another group composed by statistical
-calculations from curve values.
-
-"""
+        This class is used as a container for the calculation of periodic features
+        from a light curve.
+        
+    """
 
     # Names of the features calculated.
     __FUND_FREQ_FEAT_NAME = "Fund_Freq_"
@@ -42,11 +40,10 @@ calculations from curve values.
     def __init__(self, pgram_, lsprop_, num_freq_ = 3):
         """ Instantiation method for the PeriodicFeature class.
 
-Arguments:
-num_freq - number of frequencies to sample in the range of frequencies
+            Arguments:
+            num_freq - number of frequencies to sample in the range of frequencies
 
-
-"""
+            """
 
         self.num_freq = num_freq_
         self.lsprop = lsprop_;
@@ -58,12 +55,15 @@ num_freq - number of frequencies to sample in the range of frequencies
                (self.__class__.__name__, len(self.pgram))
 
     def __len__(self):
-        """ Return the number of frequencies in the periodgram """
+        """ Return the number of frequencies in the periodgram. """
+        
         return len(self.pgram)   
     
     def __get_freq_from_index(self, index):
-        """ Returns the frequency corresponding to an index that belongs
-        to the periodgram. """
+        """ Returns the frequency corresponding to an index of the 
+            periodgram. 
+        
+        """
 
         freq = 0
 
@@ -97,7 +97,8 @@ num_freq - number of frequencies to sample in the range of frequencies
     def __get_amplitude_n(self, num_freq):
         """ Return the amplitude of the n frequency of periodgram. """
 
-        # Check that al least the number of frequency has been calculated.
+        # Check that at least the number of frequency indicated has been 
+        # calculated.
         if num_freq < len(self.lsprop.index_max_values):
             # Get the index for this frequency.
             index = self.lsprop.index_max_values[num_freq]
@@ -111,13 +112,18 @@ num_freq - number of frequencies to sample in the range of frequencies
 
     def __get_freq_harm_n(self, num_freq, harm):
         """ Return the frequency of the harmonic requested if this harmonic 
-        exists in the periodgram calculated, otherwise returns 0. """
+            exists in the periodgram calculated, otherwise returns 0.
+            
+            num_freq - Number of the frequency whose harmonic is returned. 
+            harm -  Number of the harmonic to return for the frequency indicated.
+        
+        """
 
         # Frequency returned is 0 if this harmonic has not been calculated in the
         # periodgram.
         freq_harm = 0
 
-        # Number of manimum frequencies calculated.
+        # Number of maximum frequencies calculated.
         size = len(self.lsprop.max_values)
 
         # Check frequency requested is in the range of frequencies calculated.
@@ -146,7 +152,12 @@ num_freq - number of frequencies to sample in the range of frequencies
 
     def __get_amp_harm_n(self, num_freq, harm):
         """ Returns the amplitude of the harmonic requested if this harmonic 
-        exists in the periodgram calculated, otherwise returns 0. """
+            exists in the periodgram calculated, otherwise returns 0.
+        
+            num_freq - Number of the frequency whose harmonic amplitude is returned. 
+            harm -  Number of the harmonic to get for the frequency indicated.        
+        
+        """
 
         # Amplitude returned is 0 if this harmonic has not been calculated in the
         # periodgram.
@@ -194,8 +205,12 @@ num_freq - number of frequencies to sample in the range of frequencies
 
     def get_amplitude_firsts_harm(self, fund_freq):
         """ Return the amplitude for the three first harmonics related to the
-        indicated fundamental frequency. If the harmonic does not exists in
-        the periodgram, the value of amplitude returned is 0. """
+            indicated fundamental frequency. If the harmonic does not exists in
+            the periodgram, the value of amplitude returned is 0.
+        
+            fund_freq - Fundamental frequency used to return the values.
+        
+        """
         
         param_name = []
         harm_amps = []
@@ -208,7 +223,9 @@ num_freq - number of frequencies to sample in the range of frequencies
     
     def freq_y_offset(self):
         """ Calculates the offset of the values in the periodgram, this offset
-            is calculated as the minimum value in the periodgram. """
+            is calculated as the minimum value in the periodgram.
+            
+        """
                         
         offset = self.__pgram[0]
         

@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module stores the features of a set of stars.
+This module read and writes to file the features of a set of stars.
 
 """
 
@@ -30,18 +30,31 @@ import nonperiodicfeature
 class StarsFeatures(object):
     
     def __init__(self, star_classes_):
-        """ Initializes variables. """    
+        """ Initializes variables.
+        
+            star_classes_ - StarClasses object, it contains all the information
+                related to the stars.
+        
+        """    
         
         # Create objects to store metadata of CSV file and the data of the file.
         self.META = csvdata.MetaData()     
         
         self.__star_classes = star_classes_
         
+        # Names of the list of features generated.
         self.__features_names = []
         
     @staticmethod
     def save_feature(perfeat, noperfeat):
-        """ Save all the star features and the features names. """
+        """ Receives two object with features and returns a vector with all the
+            features and another with the name of the features. 
+        
+            perfeat - Features calculated from the periodgram.
+            noperfeat - Features corresponding a statistical calculations
+                using the light curve data.
+            
+        """
             
         feature = []
         feat_names = []
@@ -162,6 +175,9 @@ class StarsFeatures(object):
             an index corresponding to the order the star has been stored
             in star_classes.
             
+            filename - Name of the LEMON database file that contains the
+            light curves of the stars.
+            
         """       
         
         logging.info('Opening LEMON db %s.' % filename)
@@ -239,10 +255,15 @@ class StarsFeatures(object):
         logging.info('Finished the calculation of features from LEMON db.')
                     
     def write_features(self, filename):
-        """ Write to file the features calculated. """
+        """ Write to file the features calculated. 
+        
+            filename - Name of the file to write the features.
+        
+        """
         
         logging.info('Writing features to file %s.' % filename)
         
+        # Write the features as a csv file.
         features_file = csvdata.FeaturesFile()    
         
         features_file.write_features(filename, self.__star_classes, self.__features_names)   
@@ -251,10 +272,13 @@ class StarsFeatures(object):
         """ Read the features from one or more files with the file name given
             and a suffix indicating the filter name.
             
+            filename - Name of the file to write the features.            
+            
         """
         
         logging.info('Reading features from file %s.' % filename)
         
+        # Read the features from a csv file.
         features_file = csvdata.FeaturesFile() 
      
         return features_file.read_features(filename, \
@@ -265,6 +289,9 @@ class StarsFeatures(object):
             If a file containing the features is given, the features are read
             from this file. Otherwise the features are calculated from the
             light curves stores in the LEMON database.
+            
+            classifarg - ClassifierArguments object, it contains the
+                information of all program arguments received.            
             
         """
         logging.info('Getting the features of stars.')

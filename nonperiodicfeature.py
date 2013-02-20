@@ -16,9 +16,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module calculates the parameters for a light curve derived from the 
-periodgram.These parameters are intended to be used as entries for a 
-intelligent system that classify automatically stars into variable classes 
+This module calculates the features for a light curve derived from the 
+magnitude measurements. These features are intended to be used as entries 
+to a system that classifies automatically stars into variable classes 
 according to their periodic light variations.
 
 """
@@ -28,14 +28,13 @@ import numpy as np
 import scipy.stats
 
 class NonPeriodicFeature(object):
-    """ Encapsulates the calculation of periodic parameters of a light curve.
+    """ Encapsulates the calculation of periodic features of a light curve.
 
-This class is used as a container for the calculation of periodic parameters
-from a light curve. It calculates two groups of parameters, a group based in 
-periodic changes in the light curve and another group composed by statistical
-calculations from curve values.
+        This class is used as a container for the calculation of non periodic 
+        features from a light curve. It calculates features based in statistical 
+        calculations from curve values.
 
-"""
+    """
 
     # Names of the features calculated.
     __AMP_DIF_FEAT_NAME = "Amp_diff"
@@ -59,29 +58,33 @@ calculations from curve values.
     def __init__(self, nmags_, ntimes_):
         """ Instantiation method for the NonPeriodicFeature class.
 
-Arguments:
-nmags - magnitudes of the light curve.
-ntimes - time tics for the light curve, beginning at time 0.
-
-"""
+            Arguments:
+            nmags - magnitudes of the light curve.
+            ntimes - time tics for the light curve, beginning at time 0.
+            
+        """
 
         self.nmags = nmags_
         self.ntimes = ntimes_
         
     def __str__(self):
         """ The 'informal' string representation """
+        
         return "NonPeriodicFeature: %s(numero de frec = %s)" % \
                (self.__class__.__name__, len(self.pgram))
 
     def __len__(self):
-        """ Return the number of frequencies in the periodgram """
+        """ Return the number of frequencies in the periodgram. """
+        
         return len(self.pgram)   
     
     def amplitude_dif(self):
-        """ Return half the diference between the maximum and the minimum
-        magnitude """
+        """ Return half the difference between the maximum and the minimum
+            magnitude.
+            
+        """
 
-        # Get max and min values of the magnitude.
+        # Get the maximum and minimum values of the magnitude.
         max_mag = self.nmags[np.argmax(self.nmags)]
         min_mag = self.nmags[np.argmin(self.nmags)]
 
@@ -89,7 +92,9 @@ ntimes - time tics for the light curve, beginning at time 0.
 
     def beyond1st(self):
         """ Percentage of points beyond one standard deviation from the 
-        weighted mean """
+            weighted mean.
+            
+        """
 
         number_of_points = 0
         percentage = 0
@@ -98,6 +103,7 @@ ntimes - time tics for the light curve, beginning at time 0.
         avg = np.average(self.nmags)
         std = np.std(self.nmags)
 
+        # Count the number of measures beyond average plus-minus std.
         for n in range(len(self.nmags)):
             if (self.nmags[n] < avg - std) or (self.nmags[n] > avg + std):
                 number_of_points += 1
@@ -117,6 +123,7 @@ ntimes - time tics for the light curve, beginning at time 0.
 
     def __interval_avg_and_std(self):
         """ Calculate average and standard deviation of time intervals. """
+        
         intervals = []
 
         # As iterations use current index plus 1, range must be reduced in 1.
@@ -137,7 +144,9 @@ ntimes - time tics for the light curve, beginning at time 0.
         """ Maximum absolute of the flux slope between two consecutive 
         observations. As the curve is unevenly sampled the slope must be
         calculated avoiding gaps in time, as this gaps do not relate to true
-        variations between values. """
+        variations between values.
+        
+        """
 
         max_slp = 0
 
@@ -203,7 +212,9 @@ ntimes - time tics for the light curve, beginning at time 0.
 
     def pair_slope_trend(self, number = 30):
         """ Percentage of all pairs of consecutive flux measurements that have 
-        positive slope. """
+            positive slope.
+            
+        """
         
         # If the number of values to use is bigger than number of values,
         # use the number of values.
@@ -241,7 +252,9 @@ ntimes - time tics for the light curve, beginning at time 0.
     
     def percent_amplitude(self):
         """ Largest percentage difference between either the max or min 
-            magnitude and the median. """
+            magnitude and the median.
+            
+        """
             
         # Get the median.
         median = np.median(self.nmags)    
@@ -260,8 +273,10 @@ ntimes - time tics for the light curve, beginning at time 0.
         return max_dif * 100.0 / (max_mag - min_mag), NonPeriodicFeature.__PER_AMP_FEAT_NAME
 
     def percent_difference_flux_percentile(self):
-        """ PoDifference between the 5th & 95th flux percentiles, 
-            converted to magnitude. """
+        """ Difference between the 5th & 95th flux percentiles, 
+            converted to magnitude.
+            
+        """
             
         percentile_05 = scipy.stats.scoreatpercentile(self.nmags, 5)
         percentile_95 = scipy.stats.scoreatpercentile(self.nmags, 95)
@@ -286,7 +301,9 @@ ntimes - time tics for the light curve, beginning at time 0.
     
     def __flux_percentile_ratio_midXX(self, lower_perc, upper_perc):
         """ The difference between upper_perc and lower_perc percentiles flux 
-            values divided by the difference between 5% and 95% flux values. """
+            values divided by the difference between 5% and 95% flux values.
+            
+        """
             
         return (scipy.stats.scoreatpercentile(self.nmags, upper_perc) - \
                     scipy.stats.scoreatpercentile(self.nmags, lower_perc)) / \
@@ -295,7 +312,9 @@ ntimes - time tics for the light curve, beginning at time 0.
     
     def flux_percentile_ratio_mid20(self):
         """ The difference between 60% and 40% flux values divided by 
-            the difference between 5% and 95% flux values. """
+            the difference between 5% and 95% flux values.
+            
+        """
             
         return self.__flux_percentile_ratio_midXX(40, 60), \
             NonPeriodicFeature.__FLUX_PERC_RAT_MID20_FEAT_NAME
@@ -309,21 +328,27 @@ ntimes - time tics for the light curve, beginning at time 0.
                     
     def flux_percentile_ratio_mid50(self):
         """ The difference between 60% and 40% flux values divided by 
-            the difference between 5% and 95% flux values. """
+            the difference between 5% and 95% flux values.
+            
+        """
             
         return self.__flux_percentile_ratio_midXX(25, 75), \
             NonPeriodicFeature.__FLUX_PERC_RAT_MID50_FEAT_NAME
                     
     def flux_percentile_ratio_mid65(self):
         """ The difference between 60% and 40% flux values divided by 
-            the difference between 5% and 95% flux values. """
+            the difference between 5% and 95% flux values.
+            
+        """
             
         return self.__flux_percentile_ratio_midXX(17.5, 82.5), \
             NonPeriodicFeature.__FLUX_PERC_RAT_MID65_FEAT_NAME
                     
     def flux_percentile_ratio_mid80(self):
         """ The difference between 60% and 40% flux values divided by 
-            the difference between 5% and 95% flux values. """
+            the difference between 5% and 95% flux values.
+            
+        """
             
         return self.__flux_percentile_ratio_midXX(10, 90), \
             NonPeriodicFeature.__FLUX_PERC_RAT_MID80_FEAT_NAME                  

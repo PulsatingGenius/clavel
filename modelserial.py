@@ -27,12 +27,18 @@ import csv
 import sys
 
 class ClassifModel(object):
+    """ Encapsulates the serialization of an object to a file.
+        The object corresponds to a classification model.
+    
+    """
     
     def get_filters_names_from_filename(self, filename):
         """ Extracts the filter name from a filename that should corresponds
             to a model file that incorporates the filter name using the
             format: name_filter.ext
             The filter name is intended to be between the last '_' and last '.'.
+            
+            filename - File name to process.
             
         """
         
@@ -75,7 +81,11 @@ class ClassifModel(object):
     
     @staticmethod
     def read_model_file(model_file_name):
-        """ Read from the file indicated the model as a serialized object. """
+        """ Read from the file indicated the model as a serialized object.
+        
+            model_file_name - Name of the file that contains the model to read.
+        
+        """
                 
         clf = None
                
@@ -98,8 +108,10 @@ class ClassifModel(object):
     def read_model(self, filename):
         """ Read the files for all the models as serialized objects.
             Search for files with a name that matches the file name
-            received and the filter following the pattern expected
-            for the complete file name.
+            received plus a suffix added to the end of the file name,
+            excluding the extension.
+            
+            filename - Pattern for the files names that contains the models.
         
         """
         
@@ -139,16 +151,29 @@ class ClassifModel(object):
         """ Returns the name of the file composed from the file name 
             received and the name of the filter.
             
+            filename - Base name to use to compose the file name (name + extension).
+            filter_name - Filter name to add to the file name.
+            
         """
  
+        # Find the position of the dot, where the extension file is supposed to begin.
         position = filename.index('.')
         
+        # Return the final file name, composed by the base file name, underscore,
+        # the filter name and the extension
         return filename[0:position] + '_' + \
                 filter_name + \
                 filename[position:len(filename)]     
     
     def save_model(self, clf, filename, filter_name):
-        """ Write to a file the classifier model. """
+        """ Write to a file the classifier model.
+        
+            clf - Classifier to write.
+            filename - Name of the file to use.
+            filter_name - Name of the filter for this classifier that will be added to
+                the file name as suffix.
+        
+        """
         
         # The actual file name is composed from the file name
         # and the filter name.
@@ -170,8 +195,22 @@ class ClassifModel(object):
             logging.error("Error writing model to file %s" % filename)
             
 class StarClassNames(object):
+    """ Encapsulates the writing and reading in a file of the list of
+        variable stars classes. This list is used for interpreting the
+        results of classification, as the result is given as numbers.
+        These number corresponds to the ordering of classes in this list
+        of variable stars classes.
+        
+    """
     
     def __init__(self, stars_classes_names_ = None):
+        """ Initialization of object variables.
+        
+            stars_classes_names_ - the list of classes to write to file.
+                If no list is provided, the list must be read from a file.
+        
+        """
+        
         
         self.__file_name = "stars_classes.csv"
         self.__stars_classes_names = stars_classes_names_      
@@ -220,4 +259,7 @@ class StarClassNames(object):
         logging.info("Stars classes names read are: %s" % self.__stars_classes_names)
         
     def class_name(self, index):
+        """ Returns the class name from the list of classes whose position
+            in the list matches the index received. """
+                
         return self.__stars_classes_names[index]

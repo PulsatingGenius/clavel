@@ -57,7 +57,7 @@ class Classifier(object):
             mags.append(star.amg(i))
         
         # Calculate the periodgram.
-        pgram, nmags, ntimes = ls.calculate_periodgram_from_curve(unix_times, mags)
+        pgram, nmags, ntimes = ls.calculate_periodgram_from_curve(mags, unix_times)
         # Calculate periodic features of stars.
         perfeat = periodicfeature.PeriodicFeature(pgram, lsprop)
         # Calculate no periodic features of stars.
