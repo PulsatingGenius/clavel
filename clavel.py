@@ -252,13 +252,14 @@ def only_training(classifarg):
     else:
         error_exit('For training a file name to save the model must be provided.')
                 
-def write_prediction_to_file(afilter, star_classes, predicted_classes, classifarg):
+def write_prediction_to_file(afilter, star_classes, predicted_classes, predicted_classes_proba, classifarg):
     """ Writes to a csv file the prediction of a given filter.
     
         afilter - Name of the filter applicable to this prediction.
         star_classes - StarClasses object, it contains all the information
             related to the stars.
         predicted_classes - The list of predicted classes.
+        predicted_classes_proba - Probability of each prediction.
         classifarg - ClassifierArguments object, it contains the
             information of all program arguments received.
     
@@ -277,7 +278,7 @@ def write_prediction_to_file(afilter, star_classes, predicted_classes, classifar
         csv_file = csv.writer(csvfile, delimiter=',', quotechar='"')  
         
         # Write header.
-        row = [csvdata.CsvUtil.ID, csvdata.CsvUtil.PREDICTION]
+        row = [csvdata.CsvUtil.ID, csvdata.CsvUtil.PREDICTION, csvdata.CsvUtil.PRED_PROBA]
         csv_file.writerow(row)
         
         # Get the identifiers for all the stars.
@@ -285,9 +286,10 @@ def write_prediction_to_file(afilter, star_classes, predicted_classes, classifar
                 
         # Write csv rows. Each row contains a star identifier and 
         # the class predicted.
-        for star_id, predict in zip(stars_identifiers, predicted_classes):
-            
-            row = [star_id, unique_classes_names[(int(predict))]] 
+        for star_id, predict, proba in zip(stars_identifiers, predicted_classes, predicted_classes_proba):
+            # Get the row, formatting the probability value.
+            prob = float(proba) * 100
+            row = [star_id, unique_classes_names[(int(predict))], "%2.f%%" % prob] 
             csv_file.writerow(row)      
      
 def predict_stars_classes(clf, filters_names, star_classes, classifarg):
@@ -299,6 +301,7 @@ def predict_stars_classes(clf, filters_names, star_classes, classifarg):
             related to the stars.
         classifarg - ClassifierArguments object, it contains the
             information of all program arguments received.
+            
     """    
     
     # Perform the prediction for each filter.
@@ -310,6 +313,7 @@ def predict_stars_classes(clf, filters_names, star_classes, classifarg):
         
         # To save the predictions for each instance.
         predicted_classes = []
+        predicted_classes_proba = []        
         
         # For each instance in the evaluation set. 
         for i in range(len(features)):          
@@ -317,10 +321,17 @@ def predict_stars_classes(clf, filters_names, star_classes, classifarg):
             if star_classes.is_enabled(i):            
                 # Predict class for current instance.
                 predicted_class = classifier.predict(features[i])
+                
                 # Save prediction.
-                predicted_classes.append(predicted_class[0])        
+                predicted_classes.append(predicted_class[0])
+                
+                # Get probability of prediction.
+                predicted_class_proba = classifier.predict_proba(features[i])
+                
+                # Save probability of prediction.
+                predicted_classes_proba.append(predicted_class_proba[0][0])
         
-        write_prediction_to_file(afilter, star_classes, predicted_classes, classifarg)  
+        write_prediction_to_file(afilter, star_classes, predicted_classes, predicted_classes_proba, classifarg)  
         
         # Write confusion matrix.
         evaluat = evaluation.Evaluation(predicted_classes,

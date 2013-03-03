@@ -29,7 +29,8 @@ class CsvUtil(object):
     CLASS = 'CLASS'
     PARAM = 'PAR'
     ID = 'ID'
-    PREDICTION = 'PREDICTION'     
+    PREDICTION = 'PREDICTION'
+    PRED_PROBA = 'PROBABILITY'         
     FILE_EXT = '.csv'
 
 class ColumnDef(object):
